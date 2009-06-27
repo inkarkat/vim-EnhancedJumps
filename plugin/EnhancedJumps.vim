@@ -17,6 +17,7 @@
 
 " DEPENDENCIES:
 "   - Requires Vim 7.0 or higher. 
+"   - EchoWithoutScrolling.vim autoload script.  
 
 " CONFIGURATION:
 " INTEGRATION:
@@ -24,7 +25,6 @@
 " ASSUMPTIONS:
 " KNOWN PROBLEMS:
 " TODO:
-"  - EchoWithoutScrolling.vim
 "
 " Copyright: (C) 2009 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
@@ -41,13 +41,22 @@ endif
 let g:loaded_ingojumps = 1
 
 "- configuration --------------------------------------------------------------
-if ! exists('g:notificationlen')
-    let g:notificationlen = 2000
+if ! exists('g:stopFirstAndNotifyTimeoutLen')
+    let g:stopFirstAndNotifyTimeoutLen = 2000
 endif
 
 "- functions ------------------------------------------------------------------
-function! s:WasLast( current, record )
-    return (a:current[0:-2] == a:record[0:-2]) && (a:current[-1] - a:record[-1] <= (g:notificationlen / 1000))
+function! s:WasLastStop( current, record )
+    return (! empty(a:current) && ! empty(a:record) && a:current[0:-2] == a:record[0:-2]) && (a:current[-1] - a:record[-1] <= (g:stopFirstAndNotifyTimeoutLen / 1000))
+endfunction
+function! s:IsInvalid( text )
+    if a:text ==# '-invalid-'
+	" Though invalid jumps are caused by marks in another (modified) file,
+	" treat them as belonging to the current buffer; after all, Vim doesn't
+	" move to that file, and just prints the "E19: Mark has invalid line
+	" number" error. 
+	return 1
+    endif
 endfunction
 function! s:IsJumpInCurrentBuffer( line, text )
     " The jump text omits any indent, may be truncated and has non-printable
@@ -92,13 +101,15 @@ function! s:Jump( isNewer )
 	" customary beep. 
     else
 	let [l:x, l:targetLine, l:targetCol, l:targetText, l:x, l:x, l:x, l:x, l:x, l:x] = matchlist(l:targetJump, '^>\?\s*\d\+\s\+\(\d\+\)\s\+\(\d\+\)\s\+\(.*\)$')
-	if s:IsJumpInCurrentBuffer(l:targetLine, l:targetText)
-	    echo printf('%d,%d %s', l:targetLine, l:targetCol, l:targetText)
+	if s:IsInvalid(l:targetText)
+	    " Do nothing here, the jump command will print an error. 
+	elseif s:IsJumpInCurrentBuffer(l:targetLine, l:targetText)
+	    call EchoWithoutScrolling#Echo(printf('%d,%d %s', l:targetLine, l:targetCol, l:targetText))
 	else
 	    " The next jump would move to another buffer. Stop and notify first,
 	    " and only execute the jump if the same jump command is executed
 	    " once more immediately afterwards. 
-	    let l:wasLastJumpBufferStop = (exists('t:lastJumpBufferStop') && s:WasLast([a:isNewer, winnr(), l:targetText, localtime()], t:lastJumpBufferStop))
+	    let l:wasLastJumpBufferStop = (exists('t:lastJumpBufferStop') && s:WasLastStop([a:isNewer, winnr(), l:targetText, localtime()], t:lastJumpBufferStop))
 	    if ! l:wasLastJumpBufferStop
 		let t:lastJumpBufferStop = [a:isNewer, winnr(), l:targetText, localtime()]
 		let v:warningmsg = 'next: ' . l:targetText
