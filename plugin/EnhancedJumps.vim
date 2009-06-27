@@ -64,6 +64,10 @@ function! s:IsJumpInCurrentBuffer( line, text )
     let l:regexp = '\V' . substitute(escape(a:text, '\'), '\^\p', '\\.', 'g')
     return getline(a:line) =~# l:regexp
 endfunction
+function! s:ParseJumpLine( jumpLine )
+    let l:parseResult = matchlist(a:jumpLine, '^>\?\s*\d\+\s\+\(\d\+\)\s\+\(\d\+\)\s\+\(.*\)$')[1:3]
+    return (len(l:parseResult) == 3 ? l:parseResult : [0, 0, ''])
+endfunction
 function! s:Jump( isNewer )
     let l:jumpDirection = (a:isNewer ? 'newer' : 'older')
 
@@ -84,7 +88,9 @@ function! s:Jump( isNewer )
     if l:currentIndex < 0 | throw 'ASSERT: :jumps command contains > marker' | endif
 
     let l:targetIndex = l:currentIndex + (a:isNewer ? 1 : -1) * v:count1
+    let l:followingIndex = l:targetIndex + (a:isNewer ? 1 : -1)
     let l:targetJump = (l:targetIndex < 0 ? '' : get(l:jumps, l:targetIndex, ''))
+    let l:followingJump = (l:followingIndex < 0 ? '' : get(l:jumps, l:followingIndex, ''))
     if empty(l:targetJump)
 	let l:countMax = (a:isNewer ? len(l:jumps) - l:currentIndex - 1: l:currentIndex)
 	if l:countMax == 0
@@ -100,11 +106,20 @@ function! s:Jump( isNewer )
 	" determined that it won't work. The jump command will still cause the
 	" customary beep. 
     else
-	let [l:x, l:targetLine, l:targetCol, l:targetText, l:x, l:x, l:x, l:x, l:x, l:x] = matchlist(l:targetJump, '^>\?\s*\d\+\s\+\(\d\+\)\s\+\(\d\+\)\s\+\(.*\)$')
+	let [l:targetLine, l:targetCol, l:targetText] = s:ParseJumpLine(l:targetJump)
 	if s:IsInvalid(l:targetText)
 	    " Do nothing here, the jump command will print an error. 
 	elseif s:IsJumpInCurrentBuffer(l:targetLine, l:targetText)
-	    call EchoWithoutScrolling#Echo(printf('%d,%d %s', l:targetLine, l:targetCol, l:targetText))
+	    let [l:followingLine, l:followingCol, l:followingText] = s:ParseJumpLine(l:followingJump)
+	    if empty(l:followingJump)
+		echo printf('No %s jump position', l:jumpDirection)
+	    elseif s:IsInvalid(l:followingText)
+		echo 'Next jump position is invalid'
+	    elseif s:IsJumpInCurrentBuffer(l:followingLine, l:followingText)
+		call EchoWithoutScrolling#Echo(printf('next: %d,%d %s', l:followingLine, l:followingCol, l:followingText))
+	    else
+		call EchoWithoutScrolling#Echo(printf('next: %s', l:followingText))
+	    endif
 	else
 	    " The next jump would move to another buffer. Stop and notify first,
 	    " and only execute the jump if the same jump command is executed
