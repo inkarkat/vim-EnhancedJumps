@@ -2,8 +2,8 @@
 "
 " DESCRIPTION:
 "   This plugin enhances the built-in CTRL-I / CTRL-O jump commands: 
-"   - For jumps inside the current buffer, the line, column and text at the jump
-"     target are printed. 
+"   - After a jump, the line, column and text of the next jump target are
+"     printed. 
 "   - An error message and the valid range for jumps in that direction is
 "     printed if a jump outside the jumplist is attempted. 
 "   - In case the next jump would move to another buffer, only a warning is
@@ -32,6 +32,10 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	002	28-Jun-2009	ENH: After a jump, the line, column and text of
+"				the next jump target are printed. The text of
+"				jumps inside the current buffer are highlighted
+"				like in the :jumps output. 
 "	001	27-Jun-2009	file creation
 
 " Avoid installing twice or when in unsupported Vim version. 
@@ -116,7 +120,11 @@ function! s:Jump( isNewer )
 	    elseif s:IsInvalid(l:followingText)
 		echo 'Next jump position is invalid'
 	    elseif s:IsJumpInCurrentBuffer(l:followingLine, l:followingText)
-		call EchoWithoutScrolling#Echo(printf('next: %d,%d %s', l:followingLine, l:followingCol, l:followingText))
+		let l:header = printf('next: %d,%d ', l:followingLine, l:followingCol)
+		echo l:header
+		echohl Directory
+		echon EchoWithoutScrolling#Truncate(l:followingText, strlen(l:header))
+		echohl None
 	    else
 		call EchoWithoutScrolling#Echo(printf('next: %s', l:followingText))
 	    endif
