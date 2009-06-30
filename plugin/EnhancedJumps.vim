@@ -32,6 +32,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	003	29-Jun-2009	BF: Fixed missing next jump indication by
+"				executing the jump command before the :echo (and
+"				sometimes doing a :redraw before the :echo). 
 "	002	28-Jun-2009	ENH: After a jump, the line, column and text of
 "				the next jump target are printed. The text of
 "				jumps inside the current buffer are highlighted
@@ -72,6 +75,20 @@ function! s:ParseJumpLine( jumpLine )
     let l:parseResult = matchlist(a:jumpLine, '^>\?\s*\d\+\s\+\(\d\+\)\s\+\(\d\+\)\s\+\(.*\)$')[1:3]
     return (len(l:parseResult) == 3 ? l:parseResult : [0, 0, ''])
 endfunction
+function! s:DoJump( isNewer )
+    try
+	execute 'normal!' v:count1 . (a:isNewer ? "\<C-i>" : "\<C-o>")
+	return 1
+    catch /^Vim\%((\a\+)\)\=:E/
+	echohl ErrorMsg
+	" v:exception contains what is normally in v:errmsg, but with extra
+	" exception source info prepended, which we cut away. 
+	let v:errmsg = substitute(v:exception, '^Vim\%((\a\+)\)\=:', '', '')
+	echomsg v:errmsg
+	echohl None
+	return 0
+    endtry
+endfunction
 function! s:Jump( isNewer )
     let l:jumpDirection = (a:isNewer ? 'newer' : 'older')
 
@@ -106,34 +123,45 @@ function! s:Jump( isNewer )
 	echomsg v:errmsg
 	echohl None
 	
-	" We still fall through to the actual jump command, even though we've
-	" determined that it won't work. The jump command will still cause the
-	" customary beep. 
+	" We still execute the actual jump command, even though we've determined
+	" that it won't work. The jump command will still cause the customary
+	" beep. 
+	call s:DoJump(a:isNewer)
     else
 	let [l:targetLine, l:targetCol, l:targetText] = s:ParseJumpLine(l:targetJump)
 	if s:IsInvalid(l:targetText)
 	    " Do nothing here, the jump command will print an error. 
+	    call s:DoJump(a:isNewer)
 	elseif s:IsJumpInCurrentBuffer(l:targetLine, l:targetText)
-	    let [l:followingLine, l:followingCol, l:followingText] = s:ParseJumpLine(l:followingJump)
-	    if empty(l:followingJump)
-		echo printf('No %s jump position', l:jumpDirection)
-	    elseif s:IsInvalid(l:followingText)
-		echo 'Next jump position is invalid'
-	    elseif s:IsJumpInCurrentBuffer(l:followingLine, l:followingText)
-		let l:header = printf('next: %d,%d ', l:followingLine, l:followingCol)
-		echo l:header
-		echohl Directory
-		echon EchoWithoutScrolling#Truncate(l:followingText, strlen(l:header))
-		echohl None
-	    else
-		call EchoWithoutScrolling#Echo(printf('next: %s', l:followingText))
+	    " To avoid that the jump command's output overwrites the indication
+	    " of the next jump position, the jump command is executed first and
+	    " the indication only printed if the jump didn't cause an error. 
+	    if s:DoJump(a:isNewer)
+		let [l:followingLine, l:followingCol, l:followingText] = s:ParseJumpLine(l:followingJump)
+		if empty(l:followingJump)
+		    redraw
+		    echo printf('No %s jump position', l:jumpDirection)
+		elseif s:IsInvalid(l:followingText)
+		    redraw
+		    echo 'Next jump position is invalid'
+		elseif s:IsJumpInCurrentBuffer(l:followingLine, l:followingText)
+		    let l:header = printf('next: %d,%d ', l:followingLine, l:followingCol)
+		    echo l:header
+		    echohl Directory
+		    echon EchoWithoutScrolling#Truncate(l:followingText, strlen(l:header))
+		    echohl None
+		else
+		    call EchoWithoutScrolling#Echo(printf('next: %s', l:followingText))
+		endif
 	    endif
 	else
 	    " The next jump would move to another buffer. Stop and notify first,
 	    " and only execute the jump if the same jump command is executed
 	    " once more immediately afterwards. 
 	    let l:wasLastJumpBufferStop = (exists('t:lastJumpBufferStop') && s:WasLastStop([a:isNewer, winnr(), l:targetText, localtime()], t:lastJumpBufferStop))
-	    if ! l:wasLastJumpBufferStop
+	    if l:wasLastJumpBufferStop
+		call s:DoJump(a:isNewer)
+	    else
 		let t:lastJumpBufferStop = [a:isNewer, winnr(), l:targetText, localtime()]
 		let v:warningmsg = 'next: ' . l:targetText
 		echohl WarningMsg
@@ -150,17 +178,6 @@ function! s:Jump( isNewer )
     endif
 
     let t:lastJumpBufferStop = [a:isNewer, winnr(), '', 0]
-
-    try
-	execute 'normal!' v:count1 . (a:isNewer ? "\<C-i>" : "\<C-o>")
-    catch /^Vim\%((\a\+)\)\=:E/
-	echohl ErrorMsg
-	" v:exception contains what is normally in v:errmsg, but with extra
-	" exception source info prepended, which we cut away. 
-	let v:errmsg = substitute(v:exception, '^Vim\%((\a\+)\)\=:', '', '')
-	echomsg v:errmsg
-	echohl None
-    endtry
 endfunction
 
 "- mappings -------------------------------------------------------------------
