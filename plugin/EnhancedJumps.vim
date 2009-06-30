@@ -54,6 +54,9 @@ if ! exists('g:stopFirstAndNotifyTimeoutLen')
 endif
 
 "- functions ------------------------------------------------------------------
+function! s:BufferName( jumpText )
+    return (empty(a:jumpText) ? '[No name]' : a:jumpText)
+endfunction
 function! s:WasLastStop( current, record )
     return (! empty(a:current) && ! empty(a:record) && a:current[0:-2] == a:record[0:-2]) && (a:current[-1] - a:record[-1] <= (g:stopFirstAndNotifyTimeoutLen / 1000))
 endfunction
@@ -67,9 +70,15 @@ function! s:IsInvalid( text )
     endif
 endfunction
 function! s:IsJumpInCurrentBuffer( line, text )
-    " The jump text omits any indent, may be truncated and has non-printable
-    " characters rendered as ^X. The regexp has to consider this. 
-    let l:regexp = '\V' . substitute(escape(a:text, '\'), '\^\p', '\\.', 'g')
+    if empty(a:text)
+	" In case there is no jump text, the corresponding line in the current
+	" buffer also should be empty. 
+	let l:regexp = '^$'
+    else
+	" The jump text omits any indent, may be truncated and has non-printable
+	" characters rendered as ^X. The regexp has to consider this. 
+	let l:regexp = '\V' . substitute(escape(a:text, '\'), '\^\p', '\\.', 'g')
+    endif
     return getline(a:line) =~# l:regexp
 endfunction
 function! s:ParseJumpLine( jumpLine )
@@ -152,7 +161,7 @@ function! s:Jump( isNewer )
 		    echon EchoWithoutScrolling#Truncate(l:followingText, strlen(l:header))
 		    echohl None
 		else
-		    call EchoWithoutScrolling#Echo(printf('next: %s', l:followingText))
+		    call EchoWithoutScrolling#Echo(printf('next: %s', s:BufferName(l:followingText)))
 		endif
 	    endif
 	else
@@ -164,7 +173,7 @@ function! s:Jump( isNewer )
 		call s:DoJump(a:isNewer)
 	    else
 		let t:lastJumpBufferStop = [a:isNewer, winnr(), l:targetText, localtime()]
-		let v:warningmsg = 'next: ' . l:targetText
+		let v:warningmsg = 'next: ' . s:BufferName(l:targetText)
 		echohl WarningMsg
 		echomsg v:warningmsg
 		echohl None
