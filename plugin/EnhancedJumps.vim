@@ -1,30 +1,8 @@
 " EnhancedJumps.vim: Enhanced jump list navigation commands. 
 "
-" DESCRIPTION:
-"   This plugin enhances the built-in CTRL-I / CTRL-O jump commands: 
-"   - After a jump, the line, column and text of the next jump target are
-"     printed. 
-"   - An error message and the valid range for jumps in that direction is
-"     printed if a jump outside the jumplist is attempted. 
-"   - In case the next jump would move to another buffer, only a warning is
-"     printed at the first attempt. The jump to another buffer is only executed
-"     if the same jump command is executed once more immediately afterwards. 
-"
-" USAGE:
-" INSTALLATION:
-"   Put the script into your user or system Vim plugin directory (e.g.
-"   ~/.vim/plugin). 
-
 " DEPENDENCIES:
 "   - Requires Vim 7.0 or higher. 
 "   - EchoWithoutScrolling.vim autoload script.  
-
-" CONFIGURATION:
-" INTEGRATION:
-" LIMITATIONS:
-" ASSUMPTIONS:
-" KNOWN PROBLEMS:
-" TODO:
 "
 " Copyright: (C) 2009 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
@@ -32,7 +10,15 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
-"	004	01-Jul-2009	Renamed to EnhancedJumps.vim. 
+"   1.00.004	01-Jul-2009	Renamed to EnhancedJumps.vim. 
+"				BF: Empty jump text matched any line in the
+"				current buffer; but it must match an empty line
+"				to belong to the current buffer. 
+"				BF: An unnamed buffer was simply listed as
+"				"next: ", now listed as "next: [No name]". 
+"				BF: s:IsJumpInCurrentBuffer() regexp didn't
+"				consider that ^X could stand for either a
+"				non-printable char or the literal ^X sequence. 
 "	003	29-Jun-2009	BF: Fixed missing next jump indication by
 "				executing the jump command before the :echo (and
 "				sometimes doing a :redraw before the :echo). 
@@ -76,9 +62,12 @@ function! s:IsJumpInCurrentBuffer( line, text )
 	let l:regexp = '^$'
     else
 	" The jump text omits any indent, may be truncated and has non-printable
-	" characters rendered as ^X. The regexp has to consider this. 
-	let l:regexp = '\V' . substitute(escape(a:text, '\'), '\^\p', '\\.', 'g')
+	" characters rendered as ^X (so any ^X substring may either represent a
+	" non-printable single character or the literal two-character ^X
+	" sequence). The regexp has to consider this. 
+	let l:regexp = '\V' . substitute(escape(a:text, '\'), '\^\p', '\\%(\0\\|\\.\\)', 'g')
     endif
+"****D echomsg '****' l:regexp
     return getline(a:line) =~# l:regexp
 endfunction
 function! s:ParseJumpLine( jumpLine )
