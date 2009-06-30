@@ -74,9 +74,9 @@ function! s:ParseJumpLine( jumpLine )
     let l:parseResult = matchlist(a:jumpLine, '^>\?\s*\d\+\s\+\(\d\+\)\s\+\(\d\+\)\s\+\(.*\)$')[1:3]
     return (len(l:parseResult) == 3 ? l:parseResult : [0, 0, ''])
 endfunction
-function! s:DoJump( isNewer )
+function! s:DoJump( count, isNewer )
     try
-	execute 'normal!' v:count1 . (a:isNewer ? "\<C-i>" : "\<C-o>")
+	execute 'normal!' a:count . (a:isNewer ? "\<C-i>" : "\<C-o>")
 	return 1
     catch /^Vim\%((\a\+)\)\=:E/
 	echohl ErrorMsg
@@ -125,17 +125,17 @@ function! s:Jump( isNewer )
 	" We still execute the actual jump command, even though we've determined
 	" that it won't work. The jump command will still cause the customary
 	" beep. 
-	call s:DoJump(a:isNewer)
+	call s:DoJump(v:count1, a:isNewer)
     else
 	let [l:targetLine, l:targetCol, l:targetText] = s:ParseJumpLine(l:targetJump)
 	if s:IsInvalid(l:targetText)
 	    " Do nothing here, the jump command will print an error. 
-	    call s:DoJump(a:isNewer)
+	    call s:DoJump(v:count1, a:isNewer)
 	elseif s:IsJumpInCurrentBuffer(l:targetLine, l:targetText)
 	    " To avoid that the jump command's output overwrites the indication
 	    " of the next jump position, the jump command is executed first and
 	    " the indication only printed if the jump didn't cause an error. 
-	    if s:DoJump(a:isNewer)
+	    if s:DoJump(v:count1, a:isNewer)
 		let [l:followingLine, l:followingCol, l:followingText] = s:ParseJumpLine(l:followingJump)
 		if empty(l:followingJump)
 		    redraw
@@ -159,13 +159,20 @@ function! s:Jump( isNewer )
 	    " once more immediately afterwards. 
 	    let l:wasLastJumpBufferStop = (exists('t:lastJumpBufferStop') && s:WasLastStop([a:isNewer, winnr(), l:targetText, localtime()], t:lastJumpBufferStop))
 	    if l:wasLastJumpBufferStop
-		call s:DoJump(a:isNewer)
+		" If no [count] is given on this repetition, re-use the [count]
+		" from the initial jump command that got stuck on the warning. 
+		let l:count = (v:count ? v:count1 : s:lastCount)
+		call s:DoJump(l:count, a:isNewer)
 	    else
 		let t:lastJumpBufferStop = [a:isNewer, winnr(), l:targetText, localtime()]
 		let v:warningmsg = 'next: ' . s:BufferName(l:targetText)
 		echohl WarningMsg
 		echomsg v:warningmsg
 		echohl None
+
+		" Memorize the given [count], so that it need not be specified
+		" on the repetition of the jump command to overcome the warning. 
+		let s:lastCount = v:count1
 
 		" Signal edge case via beep. 
 		execute "normal \<Plug>IngoJumpsBell" 
