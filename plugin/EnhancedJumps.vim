@@ -107,7 +107,19 @@ function! s:Jump( isNewer )
     endfor
     if l:currentIndex < 0 | throw 'ASSERT: :jumps command contains > marker' | endif
 
-    let l:targetIndex = l:currentIndex + (a:isNewer ? 1 : -1) * v:count1
+    " Determine whether this is a repetition of the same jump command that got
+    " stuck on the warning about jumping into another buffer. 
+    let l:wasStopped = (exists('t:lastJumpCommandCount') && t:lastJumpCommandCount)
+    if l:wasStopped
+	" If no [count] is given on this repetition, re-use the [count]
+	" from the initial jump command that got stuck on the warning. 
+	let l:count = (v:count ? v:count1 : t:lastJumpCommandCount)
+    else
+	" This isn't a repetition; use the supplied [count]. 
+	let l:count = v:count1
+    endif
+
+    let l:targetIndex = l:currentIndex + (a:isNewer ? 1 : -1) * l:count
     let l:followingIndex = l:targetIndex + (a:isNewer ? 1 : -1)
     let l:targetJump = (l:targetIndex < 0 ? '' : get(l:jumps, l:targetIndex, ''))
     let l:followingJump = (l:followingIndex < 0 ? '' : get(l:jumps, l:followingIndex, ''))
@@ -125,17 +137,17 @@ function! s:Jump( isNewer )
 	" We still execute the actual jump command, even though we've determined
 	" that it won't work. The jump command will still cause the customary
 	" beep. 
-	call s:DoJump(v:count1, a:isNewer)
+	call s:DoJump(l:count, a:isNewer)
     else
 	let [l:targetLine, l:targetCol, l:targetText] = s:ParseJumpLine(l:targetJump)
 	if s:IsInvalid(l:targetText)
 	    " Do nothing here, the jump command will print an error. 
-	    call s:DoJump(v:count1, a:isNewer)
+	    call s:DoJump(l:count, a:isNewer)
 	elseif s:IsJumpInCurrentBuffer(l:targetLine, l:targetText)
 	    " To avoid that the jump command's output overwrites the indication
 	    " of the next jump position, the jump command is executed first and
 	    " the indication only printed if the jump didn't cause an error. 
-	    if s:DoJump(v:count1, a:isNewer)
+	    if s:DoJump(l:count, a:isNewer)
 		let [l:followingLine, l:followingCol, l:followingText] = s:ParseJumpLine(l:followingJump)
 		if empty(l:followingJump)
 		    redraw
@@ -155,24 +167,25 @@ function! s:Jump( isNewer )
 	    endif
 	else
 	    " The next jump would move to another buffer. Stop and notify first,
-	    " and only execute the jump if the same jump command is executed
-	    " once more immediately afterwards. 
-	    let l:wasLastJumpBufferStop = (exists('t:lastJumpBufferStop') && s:WasLastStop([a:isNewer, winnr(), l:targetText, localtime()], t:lastJumpBufferStop))
+	    " and only execute the jump if the same jump command (either
+	    " repeating the original [count] or completely omitting it) is
+	    " executed once more immediately afterwards. 
+	    let l:isSameCountAsLast = (! v:count || (exists('t:lastJumpCommandCount') && t:lastJumpCommandCount == v:count1))
+	    let l:wasLastJumpBufferStop = l:isSameCountAsLast && (exists('t:lastJumpBufferStop') && s:WasLastStop([a:isNewer, winnr(), l:targetText, localtime()], t:lastJumpBufferStop))
 	    if l:wasLastJumpBufferStop
-		" If no [count] is given on this repetition, re-use the [count]
-		" from the initial jump command that got stuck on the warning. 
-		let l:count = (v:count ? v:count1 : s:lastCount)
 		call s:DoJump(l:count, a:isNewer)
 	    else
 		let t:lastJumpBufferStop = [a:isNewer, winnr(), l:targetText, localtime()]
+
+		" Memorize the given [count] to detect the same jump command,
+		" and that it need not be specified on the repetition of the
+		" jump command to overcome the warning. 
+		let t:lastJumpCommandCount = l:count
+
 		let v:warningmsg = 'next: ' . s:BufferName(l:targetText)
 		echohl WarningMsg
 		echomsg v:warningmsg
 		echohl None
-
-		" Memorize the given [count], so that it need not be specified
-		" on the repetition of the jump command to overcome the warning. 
-		let s:lastCount = v:count1
 
 		" Signal edge case via beep. 
 		execute "normal \<Plug>IngoJumpsBell" 
@@ -184,6 +197,7 @@ function! s:Jump( isNewer )
     endif
 
     let t:lastJumpBufferStop = [a:isNewer, winnr(), '', 0]
+    let t:lastJumpCommandCount = 0  " This is no repetition. 
 endfunction
 
 "- mappings -------------------------------------------------------------------
