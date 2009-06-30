@@ -1,4 +1,4 @@
-" ingojumps.vim: Enhanced jump list navigation commands. 
+" EnhancedJumps.vim: Enhanced jump list navigation commands. 
 "
 " DESCRIPTION:
 "   This plugin enhances the built-in CTRL-I / CTRL-O jump commands: 
@@ -32,6 +32,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	004	01-Jul-2009	Renamed to EnhancedJumps.vim. 
 "	003	29-Jun-2009	BF: Fixed missing next jump indication by
 "				executing the jump command before the :echo (and
 "				sometimes doing a :redraw before the :echo). 
@@ -42,10 +43,10 @@
 "	001	27-Jun-2009	file creation
 
 " Avoid installing twice or when in unsupported Vim version. 
-if exists('g:loaded_ingojumps') || (v:version < 700)
+if exists('g:loaded_EnhancedJumps') || (v:version < 700)
     finish
 endif
-let g:loaded_ingojumps = 1
+let g:loaded_EnhancedJumps = 1
 
 "- configuration --------------------------------------------------------------
 if ! exists('g:stopFirstAndNotifyTimeoutLen')
@@ -181,13 +182,13 @@ function! s:Jump( isNewer )
 endfunction
 
 "- mappings -------------------------------------------------------------------
-nnoremap <Plug>IngoJumpsOlder :<C-u>call <SID>Jump(0)<CR>
-nnoremap <Plug>IngoJumpsNewer :<C-u>call <SID>Jump(1)<CR>
-if ! hasmapto('<Plug>IngoJumpsOlder', 'n')
-    nmap <silent> <C-o> <Plug>IngoJumpsOlder
+nnoremap <Plug>EnhancedJumpsOlder :<C-u>call <SID>Jump(0)<CR>
+nnoremap <Plug>EnhancedJumpsNewer :<C-u>call <SID>Jump(1)<CR>
+if ! hasmapto('<Plug>EnhancedJumpsOlder', 'n')
+    nmap <silent> <C-o> <Plug>EnhancedJumpsOlder
 endif
-if ! hasmapto('<Plug>IngoJumpsNewer', 'n')
-    nmap <silent> <C-i> <Plug>IngoJumpsNewer
+if ! hasmapto('<Plug>EnhancedJumpsNewer', 'n')
+    nmap <silent> <C-i> <Plug>EnhancedJumpsNewer
 endif
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
