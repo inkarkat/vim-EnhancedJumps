@@ -1,0 +1,99 @@
+*EnhancedJumps.txt*     Enhanced jump list navigation commands. 
+
+		       ENHANCED JUMPS    by Ingo Karkat
+							   *EnhancedJumps.vim*
+description			|EnhancedJumps-description|
+usage	    			|EnhancedJumps-usage|
+installation   			|EnhancedJumps-installation|
+configuration  			|EnhancedJumps-configuration|
+limitations			|EnhancedJumps-limitations|
+known problems			|EnhancedJumps-known-problems|
+todo				|EnhancedJumps-todo|
+history				|EnhancedJumps-history|
+
+==============================================================================
+DESCRIPTION					   *EnhancedJumps-description*
+
+This plugin enhances the built-in |CTRL-I|/|CTRL-O| jump commands: 
+- After a jump, the line, column and text of the next jump target are printed: 
+    next: 3,9 ENHANCED JUMPS    by Ingo Karkat ~
+- An error message and the valid range for jumps in that direction is printed
+  if a jump outside the jump list is attempted: 
+    Only 8 older jump positions. ~
+- In case the next jump would move to another buffer, only a warning is
+  printed at the first attempt:
+    next: EnhancedJumps.vim ~
+  The jump to another buffer is only done if the same jump command is repeated
+  once more immediately afterwards; like this: Pressing CTRL-O, noticing the
+  warning, then quickly pressing CTRL-O again to overcome the warning. 
+  With this, you can eagerly jump around the current buffer. Because you will
+  be warned when a jump would move to another buffer, you're much less likely
+  to get lost. 
+
+==============================================================================
+USAGE							 *EnhancedJumps-usage*
+
+Simply use the |CTRL-O| and |CTRL-I| commands to go to an older / newer cursor
+position in the jump list. 
+
+==============================================================================
+INSTALLATION					  *EnhancedJumps-installation*
+
+This script is packaged as a|vimball|. If you have the "gunzip" decompressor
+in your PATH, simply edit the *.vba.gz package in Vim; otherwise, decompress
+the archive first, e.g. using WinZip. Inside Vim, install by sourcing the
+vimball or via the|:UseVimball|command. >
+    vim EnhancedJumps.vba.gz
+    :so %
+To uninstall, use the|:RmVimball|command. 
+
+DEPENDENCIES					  *EnhancedJumps-dependencies*
+
+- Requires Vim 7.0 or higher. 
+
+==============================================================================
+CONFIGURATION					 *EnhancedJumps-configuration*
+
+The time span in which the jump command must be repeated to overcome the
+warning about jumping into another buffer defaults to (roughly) two seconds.
+To change the timeout, set a different value (in milliseconds): >
+    let g:stopFirstAndNotifyTimeoutLen = 2000
+<
+If you do not want to override the built-in jump commands and use separate
+mappings, map your keys to the <Plug>... mapping targets _before_ sourcing
+this script (e.g. in your |vimrc| ). >
+    nmap { <Plug>EnhancedJumpsOlder
+    nmap } <Plug>EnhancedJumpsNewer
+<
+==============================================================================
+LIMITATIONS					   *EnhancedJumps-limitations*
+
+- If the jump target is an empty line in another unnamed buffer, and the
+  current buffer contains an empty line at the target line, the jump outside
+  the current buffer is not detected, and no warning given. 
+- If the jump target is in another buffer, and the current buffer contains
+  that buffer's filespec at the target line, the jump outside the current
+  buffer is not detected, and no warning given. 
+
+KNOWN PROBLEMS					*EnhancedJumps-known-problems*
+
+TODO							  *EnhancedJumps-todo*
+
+- Store v:count and automatically reapply when overcoming the next buffer
+  warning, so that a [count] need not be repeated. 
+
+IDEAS							 *EnhancedJumps-ideas*
+
+==============================================================================
+HISTORY						       *EnhancedJumps-history*
+
+1.00	01-Jul-2009
+First published version. 
+
+==============================================================================
+Copyright: (C) 2009 by Ingo Karkat
+The VIM LICENSE applies to this script; see|copyright|. 
+
+Maintainer:	Ingo Karkat <ingo@karkat.de>
+==============================================================================
+ vim:tw=78:ts=8:ft=help:norl:
