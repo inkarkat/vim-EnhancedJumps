@@ -10,6 +10,14 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.10.005	01-Jul-2009	ENH: To overcome the next buffer warning, a
+"				previously given [count] need not be specified
+"				again. A jump command with a different [count]
+"				than last time now is treated as a separate jump
+"				command and thus doesn't overcome the next
+"				buffer warning. 
+"				Factored out s:GetJumps(), s:GetCurrentIndex()
+"				and s:GetCount() to reduce the size of s:Jump(). 
 "   1.00.004	01-Jul-2009	Renamed to EnhancedJumps.vim. 
 "				BF: Empty jump text matched any line in the
 "				current buffer; but it must match an empty line
@@ -40,6 +48,40 @@ if ! exists('g:stopFirstAndNotifyTimeoutLen')
 endif
 
 "- functions ------------------------------------------------------------------
+function! s:GetJumps()
+    redir => l:jumpsOutput
+    silent! jumps
+    redir END
+    redraw  " This is necessary because of the :redir done earlier. 
+
+    return split(l:jumpsOutput, "\n")[1:] " The first line contains the header. 
+endfunction
+function! s:GetCurrentIndex( jumps )
+    let l:currentIndex = -1
+    " Note: The linear search starts from the end because it's more likely that
+    " the user hasn't navigated to the oldest entries in the jump list. 
+    for l:i in reverse(range(len(a:jumps)))
+	if strpart(a:jumps[l:i], 0, 1) == '>'
+	    let l:currentIndex = l:i
+	    break
+	endif
+    endfor
+    if l:currentIndex < 0 | throw 'ASSERT: :jumps command contains > marker' | endif
+    return l:currentIndex
+endfunction
+function! s:GetCount()
+    " Determine whether this is a repetition of the same jump command that got
+    " stuck on the warning about jumping into another buffer. 
+    let l:wasStopped = (exists('t:lastJumpCommandCount') && t:lastJumpCommandCount)
+    if l:wasStopped
+	" If no [count] is given on this repetition, re-use the [count]
+	" from the initial jump command that got stuck on the warning. 
+	return (v:count ? v:count1 : t:lastJumpCommandCount)
+    else
+	" This isn't a repetition; use the supplied [count]. 
+	return v:count1
+    endif
+endfunction
 function! s:BufferName( jumpText )
     return (empty(a:jumpText) ? '[No name]' : a:jumpText)
 endfunction
@@ -90,34 +132,9 @@ function! s:DoJump( count, isNewer )
 endfunction
 function! s:Jump( isNewer )
     let l:jumpDirection = (a:isNewer ? 'newer' : 'older')
-
-    redir => l:jumpsOutput
-    silent! jumps
-    redir END
-    redraw  " This is necessary because of the :redir done earlier. 
-
-    let l:jumps = split(l:jumpsOutput, "\n")[1:] " The first line contains the header. 
-
-    let l:currentIndex = -1
-    for l:i in reverse(range(len(l:jumps)))
-	if strpart(l:jumps[l:i], 0, 1) == '>'
-	    let l:currentIndex = l:i
-	    break
-	endif
-    endfor
-    if l:currentIndex < 0 | throw 'ASSERT: :jumps command contains > marker' | endif
-
-    " Determine whether this is a repetition of the same jump command that got
-    " stuck on the warning about jumping into another buffer. 
-    let l:wasStopped = (exists('t:lastJumpCommandCount') && t:lastJumpCommandCount)
-    if l:wasStopped
-	" If no [count] is given on this repetition, re-use the [count]
-	" from the initial jump command that got stuck on the warning. 
-	let l:count = (v:count ? v:count1 : t:lastJumpCommandCount)
-    else
-	" This isn't a repetition; use the supplied [count]. 
-	let l:count = v:count1
-    endif
+    let l:jumps = s:GetJumps()
+    let l:currentIndex = s:GetCurrentIndex(l:jumps)
+    let l:count = s:GetCount()
 
     let l:targetIndex = l:currentIndex + (a:isNewer ? 1 : -1) * l:count
     let l:followingIndex = l:targetIndex + (a:isNewer ? 1 : -1)
@@ -175,6 +192,9 @@ function! s:Jump( isNewer )
 	    if l:wasLastJumpBufferStop
 		call s:DoJump(l:count, a:isNewer)
 	    else
+		" Memorize the current jump command, context, target and time
+		" (except for the [count], which is stored separately) to be
+		" able to detect the same jump command. 
 		let t:lastJumpBufferStop = [a:isNewer, winnr(), l:targetText, localtime()]
 
 		" Memorize the given [count] to detect the same jump command,
