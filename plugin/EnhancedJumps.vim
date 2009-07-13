@@ -10,6 +10,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.10.006	06-Jul-2009	BF: Folds at the jump target must be explicitly
+"				opened; inside a mapping / :normal CTRL-I/O
+"				behave like [nN*#]. 
 "   1.10.005	01-Jul-2009	ENH: To overcome the next buffer warning, a
 "				previously given [count] need not be specified
 "				again. A jump command with a different [count]
@@ -119,6 +122,11 @@ endfunction
 function! s:DoJump( count, isNewer )
     try
 	execute 'normal!' a:count . (a:isNewer ? "\<C-i>" : "\<C-o>")
+
+	" When typed, CTRL-I/O open the fold at the jump target, but inside a
+	" mapping or :normal this must be done explicitly via 'zv'. 
+	normal! zv 
+	
 	return 1
     catch /^Vim\%((\a\+)\)\=:E/
 	echohl ErrorMsg
