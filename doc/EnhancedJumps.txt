@@ -34,7 +34,12 @@ This plugin enhances the built-in |CTRL-I|/|CTRL-O| jump commands:
 USAGE							 *EnhancedJumps-usage*
 
 Simply use the |CTRL-O| and |CTRL-I| commands to go to an older / newer cursor
-position in the jump list. 
+position in the jump list. When a warning "next: {file}" is echoed, quickly
+repeat the jump command to move to that buffer (a [count] need to not be
+typed again; if you do include the [count], it must be the same as before). 
+If you do not want to move to that buffer, just ignore the warning, and
+continue browsing the current buffer. On the next jump attempt, the warning
+will be repeated. 
 
 ==============================================================================
 INSTALLATION					  *EnhancedJumps-installation*
@@ -79,13 +84,20 @@ KNOWN PROBLEMS					*EnhancedJumps-known-problems*
 
 TODO							  *EnhancedJumps-todo*
 
-- Store v:count and automatically reapply when overcoming the next buffer
-  warning, so that a [count] need not be repeated. 
-
 IDEAS							 *EnhancedJumps-ideas*
 
 ==============================================================================
 HISTORY						       *EnhancedJumps-history*
+
+1.11	14-Jul-2009
+BF: A '^\)' in the jump text caused "E55: Unmatched \)"
+
+1.10	06-Jul-2009
+- ENH: To overcome the next buffer warning, a previously given [count] need
+  not be specified again. A jump command with a different [count] than last
+  time now is treated as a separate jump command and thus doesn't overcome the
+  next buffer warning. 
+- BF: Folds at the jump target must be explicitly opened. 
 
 1.00	01-Jul-2009
 First published version. 
