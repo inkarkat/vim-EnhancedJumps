@@ -10,6 +10,12 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.11.007	14-Jul-2009	BF: A '^\)' string caused "E55: Unmatched \)"
+"				because the '\^\p' regexp fragment would only
+"				match the first half of the text's escaped
+"				backslash and thus sabotage the escaping. Now
+"				explicitly matching an escaped backslash (\\) as
+"				an alternative to the \p atom. 
 "   1.10.006	06-Jul-2009	BF: Folds at the jump target must be explicitly
 "				opened; inside a mapping / :normal CTRL-I/O
 "				behave like [nN*#]. 
@@ -110,7 +116,7 @@ function! s:IsJumpInCurrentBuffer( line, text )
 	" characters rendered as ^X (so any ^X substring may either represent a
 	" non-printable single character or the literal two-character ^X
 	" sequence). The regexp has to consider this. 
-	let l:regexp = '\V' . substitute(escape(a:text, '\'), '\^\p', '\\%(\0\\|\\.\\)', 'g')
+	let l:regexp = '\V' . substitute(escape(a:text, '\'), '\^\%(\\\\\|\p\)', '\\%(\0\\|\\.\\)', 'g')
     endif
 "****D echomsg '****' l:regexp
     return getline(a:line) =~# l:regexp
