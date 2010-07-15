@@ -10,6 +10,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.12.008	17-Jul-2009	BF: Trailing space after the command to open the
+"				folds accidentally moved cursor one position to
+"				the right of the jump target. 
 "   1.11.007	14-Jul-2009	BF: A '^\)' string caused "E55: Unmatched \)"
 "				because the '\^\p' regexp fragment would only
 "				match the first half of the text's escaped
@@ -131,7 +134,7 @@ function! s:DoJump( count, isNewer )
 
 	" When typed, CTRL-I/O open the fold at the jump target, but inside a
 	" mapping or :normal this must be done explicitly via 'zv'. 
-	normal! zv 
+	normal! zv
 	
 	return 1
     catch /^Vim\%((\a\+)\)\=:E/
