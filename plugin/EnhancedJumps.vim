@@ -10,6 +10,11 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.20.011	13-Sep-2011	Implement "local jumps" and "remote jumps"
+"				varieties: 
+"				Change signature of s:IsJumpInCurrentBuffer() to
+"				be suitable for directly accepting
+"				s:ParseJumpLine() results. 
 "   1.14.010	13-Sep-2011	Better way to beep. 
 "   1.13.009	16-Jul-2010	BUG: Jump opened fold at current position when
 "				"No newer/older jump position" error occurred.
@@ -75,12 +80,27 @@ function! s:GetJumps()
 
     return split(l:jumpsOutput, "\n")[1:] " The first line contains the header. 
 endfunction
+function! s:IsJumpNotInCurrentBuffer( jumpLine )
+    " For proper indexing, we must include the current jump line in the results. 
+    return (a:jumpLine[0] ==# '>' || ! s:IsJumpInCurrentBuffer(s:ParseJumpLine(a:jumpLine)))
+endfunction
+function! s:FilterJumps( jumps, filter )
+    if empty(a:filter)
+	return a:jumps
+    elseif a:filter ==# 'local'
+	return filter(a:jumps, 's:IsJumpInCurrentBuffer(s:ParseJumpLine(v:val))')
+    elseif a:filter ==# 'remote'
+	return filter(a:jumps, 's:IsJumpNotInCurrentBuffer(v:val)')
+    else
+	throw 'ASSERT: Unknown filter type ' . string(a:filter)
+    endif
+endfunction
 function! s:GetCurrentIndex( jumps )
     let l:currentIndex = -1
     " Note: The linear search starts from the end because it's more likely that
     " the user hasn't navigated to the oldest entries in the jump list. 
     for l:i in reverse(range(len(a:jumps)))
-	if strpart(a:jumps[l:i], 0, 1) == '>'
+	if a:jumps[l:i][0] ==# '>'
 	    let l:currentIndex = l:i
 	    break
 	endif
@@ -116,8 +136,9 @@ function! s:IsInvalid( text )
 	return 1
     endif
 endfunction
-function! s:IsJumpInCurrentBuffer( line, text )
-    if empty(a:text)
+function! s:IsJumpInCurrentBuffer( parsedJump )
+    let [l:line, l:dummy, l:text] = a:parsedJump
+    if empty(l:text)
 	" In case there is no jump text, the corresponding line in the current
 	" buffer also should be empty. 
 	let l:regexp = '^$'
@@ -126,14 +147,14 @@ function! s:IsJumpInCurrentBuffer( line, text )
 	" characters rendered as ^X (so any ^X substring may either represent a
 	" non-printable single character or the literal two-character ^X
 	" sequence). The regexp has to consider this. 
-	let l:regexp = '\V' . substitute(escape(a:text, '\'), '\^\%(\\\\\|\p\)', '\\%(\0\\|\\.\\)', 'g')
+	let l:regexp = '\V' . substitute(escape(l:text, '\'), '\^\%(\\\\\|\p\)', '\\%(\0\\|\\.\\)', 'g')
     endif
 "****D echomsg '****' l:regexp
-    return getline(a:line) =~# l:regexp
+    return getline(l:line) =~# l:regexp
 endfunction
 function! s:ParseJumpLine( jumpLine )
-    let l:parseResult = matchlist(a:jumpLine, '^>\?\s*\d\+\s\+\(\d\+\)\s\+\(\d\+\)\s\+\(.*\)$')[1:3]
-    return (len(l:parseResult) == 3 ? l:parseResult : [0, 0, ''])
+    let l:parsedJump = matchlist(a:jumpLine, '^>\?\s*\d\+\s\+\(\d\+\)\s\+\(\d\+\)\s\+\(.*\)$')[1:3]
+    return (len(l:parsedJump) == 3 ? l:parsedJump : [0, 0, ''])
 endfunction
 function! s:RecordPosition()
     " The position record consists of the current cursor position and the buffer
@@ -169,9 +190,9 @@ function! s:DoJump( count, isNewer )
 	return 0
     endtry
 endfunction
-function! s:Jump( isNewer )
+function! s:Jump( isNewer, filter )
     let l:jumpDirection = (a:isNewer ? 'newer' : 'older')
-    let l:jumps = s:GetJumps()
+    let l:jumps = s:FilterJumps(s:GetJumps(), a:filter)
     let l:currentIndex = s:GetCurrentIndex(l:jumps)
     let l:count = s:GetCount()
 
@@ -199,7 +220,7 @@ function! s:Jump( isNewer )
 	if s:IsInvalid(l:targetText)
 	    " Do nothing here, the jump command will print an error. 
 	    call s:DoJump(l:count, a:isNewer)
-	elseif s:IsJumpInCurrentBuffer(l:targetLine, l:targetText)
+	elseif s:IsJumpInCurrentBuffer([l:targetLine, l:targetCol, l:targetText])
 	    " To avoid that the jump command's output overwrites the indication
 	    " of the next jump position, the jump command is executed first and
 	    " the indication only printed if the jump didn't cause an error. 
@@ -211,7 +232,7 @@ function! s:Jump( isNewer )
 		elseif s:IsInvalid(l:followingText)
 		    redraw
 		    echo 'Next jump position is invalid'
-		elseif s:IsJumpInCurrentBuffer(l:followingLine, l:followingText)
+		elseif s:IsJumpInCurrentBuffer([l:followingLine, l:followingCol, l:followingText])
 		    let l:header = printf('next: %d,%d ', l:followingLine, l:followingCol)
 		    echo l:header
 		    echohl Directory
@@ -260,13 +281,30 @@ function! s:Jump( isNewer )
 endfunction
 
 "- mappings -------------------------------------------------------------------
-nnoremap <Plug>EnhancedJumpsOlder :<C-u>call <SID>Jump(0)<CR>
-nnoremap <Plug>EnhancedJumpsNewer :<C-u>call <SID>Jump(1)<CR>
+nnoremap <Plug>EnhancedJumpsOlder       :<C-u>call <SID>Jump(0,'')<CR>
+nnoremap <Plug>EnhancedJumpsNewer       :<C-u>call <SID>Jump(1,'')<CR>
+nnoremap <Plug>EnhancedJumpsLocalOlder  :<C-u>call <SID>Jump(0,'local')<CR>
+nnoremap <Plug>EnhancedJumpsLocalNewer  :<C-u>call <SID>Jump(1,'local')<CR>
+nnoremap <Plug>EnhancedJumpsRemoteOlder :<C-u>call <SID>Jump(0,'remote')<CR>
+nnoremap <Plug>EnhancedJumpsRemoteNewer :<C-u>call <SID>Jump(1,'remote')<CR>
+
 if ! hasmapto('<Plug>EnhancedJumpsOlder', 'n')
     nmap <silent> <C-o> <Plug>EnhancedJumpsOlder
 endif
 if ! hasmapto('<Plug>EnhancedJumpsNewer', 'n')
     nmap <silent> <C-i> <Plug>EnhancedJumpsNewer
+endif
+if ! hasmapto('<Plug>EnhancedJumpsLocalOlder', 'n')
+    nmap <silent> g<C-o> <Plug>EnhancedJumpsLocalOlder
+endif
+if ! hasmapto('<Plug>EnhancedJumpsLocalNewer', 'n')
+    nmap <silent> g<C-i> <Plug>EnhancedJumpsLocalNewer
+endif
+if ! hasmapto('<Plug>EnhancedJumpsRemoteOlder', 'n')
+    nmap <silent> <Leader><C-o> <Plug>EnhancedJumpsRemoteOlder
+endif
+if ! hasmapto('<Plug>EnhancedJumpsRemoteNewer', 'n')
+    nmap <silent> <Leader><C-i> <Plug>EnhancedJumpsRemoteNewer
 endif
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
