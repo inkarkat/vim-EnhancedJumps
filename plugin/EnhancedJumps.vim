@@ -137,7 +137,7 @@ function! s:IsInvalid( text )
     endif
 endfunction
 function! s:IsJumpInCurrentBuffer( parsedJump )
-    let [l:line, l:dummy, l:text] = a:parsedJump
+    let l:text = a:parsedJump[3]
     if empty(l:text)
 	" In case there is no jump text, the corresponding line in the current
 	" buffer also should be empty. 
@@ -150,11 +150,13 @@ function! s:IsJumpInCurrentBuffer( parsedJump )
 	let l:regexp = '\V' . substitute(escape(l:text, '\'), '\^\%(\\\\\|\p\)', '\\%(\0\\|\\.\\)', 'g')
     endif
 "****D echomsg '****' l:regexp
+    let l:line = a:parsedJump[1]
     return getline(l:line) =~# l:regexp
 endfunction
 function! s:ParseJumpLine( jumpLine )
-    let l:parsedJump = matchlist(a:jumpLine, '^>\?\s*\d\+\s\+\(\d\+\)\s\+\(\d\+\)\s\+\(.*\)$')[1:3]
-    return (len(l:parsedJump) == 3 ? l:parsedJump : [0, 0, ''])
+    " Parse one line of output from :jumps into count, lnum, col, text. 
+    let l:parsedJump = matchlist(a:jumpLine, '^>\?\s*\(\d\+\)\s\+\(\d\+\)\s\+\(\d\+\)\s\+\(.*\)$')[1:4]
+    return (len(l:parsedJump) == 4 ? l:parsedJump : [0, 0, 0, ''])
 endfunction
 function! s:RecordPosition()
     " The position record consists of the current cursor position and the buffer
@@ -200,6 +202,13 @@ function! s:Jump( isNewer, filter )
     let l:followingIndex = l:targetIndex + (a:isNewer ? 1 : -1)
     let l:targetJump = (l:targetIndex < 0 ? '' : get(l:jumps, l:targetIndex, ''))
     let l:followingJump = (l:followingIndex < 0 ? '' : get(l:jumps, l:followingIndex, ''))
+echomsg '****' l:targetIndex l:targetJump
+echomsg '****' l:followingIndex l:followingJump
+    " In case of filtering the count for the jump command does not correspond to
+    " the given count and must be retrieved from the jump line. 
+    let l:jumpCount = (empty(a:filter) ? l:count : s:ParseJumpLine(l:targetJump)[0])
+echomsg '****' l:count l:jumpCount
+
     if empty(l:targetJump)
 	let l:countMax = (a:isNewer ? len(l:jumps) - l:currentIndex - 1: l:currentIndex)
 	if l:countMax == 0
@@ -214,25 +223,27 @@ function! s:Jump( isNewer, filter )
 	" We still execute the actual jump command, even though we've determined
 	" that it won't work. The jump command will still cause the customary
 	" beep. 
-	call s:DoJump(l:count, a:isNewer)
+	call s:DoJump(l:jumpCount, a:isNewer)
     else
-	let [l:targetLine, l:targetCol, l:targetText] = s:ParseJumpLine(l:targetJump)
+	let l:targetParsedJump = s:ParseJumpLine(l:targetJump)
+	let [l:targetLine, l:targetCol, l:targetText] = l:targetParsedJump[1:3]
 	if s:IsInvalid(l:targetText)
 	    " Do nothing here, the jump command will print an error. 
-	    call s:DoJump(l:count, a:isNewer)
-	elseif s:IsJumpInCurrentBuffer([l:targetLine, l:targetCol, l:targetText])
+	    call s:DoJump(l:jumpCount, a:isNewer)
+	elseif s:IsJumpInCurrentBuffer(l:targetParsedJump)
 	    " To avoid that the jump command's output overwrites the indication
 	    " of the next jump position, the jump command is executed first and
 	    " the indication only printed if the jump didn't cause an error. 
-	    if s:DoJump(l:count, a:isNewer)
-		let [l:followingLine, l:followingCol, l:followingText] = s:ParseJumpLine(l:followingJump)
+	    if s:DoJump(l:jumpCount, a:isNewer)
+		let l:followingParsedJump = s:ParseJumpLine(l:followingJump)
+		let [l:followingLine, l:followingCol, l:followingText] = l:followingParsedJump[1:3]
 		if empty(l:followingJump)
 		    redraw
 		    echo printf('No %s jump position', l:jumpDirection)
 		elseif s:IsInvalid(l:followingText)
 		    redraw
 		    echo 'Next jump position is invalid'
-		elseif s:IsJumpInCurrentBuffer([l:followingLine, l:followingCol, l:followingText])
+		elseif s:IsJumpInCurrentBuffer(l:followingParsedJump)
 		    let l:header = printf('next: %d,%d ', l:followingLine, l:followingCol)
 		    echo l:header
 		    echohl Directory
@@ -250,7 +261,7 @@ function! s:Jump( isNewer, filter )
 	    let l:isSameCountAsLast = (! v:count || (exists('t:lastJumpCommandCount') && t:lastJumpCommandCount == v:count1))
 	    let l:wasLastJumpBufferStop = l:isSameCountAsLast && (exists('t:lastJumpBufferStop') && s:WasLastStop([a:isNewer, winnr(), l:targetText, localtime()], t:lastJumpBufferStop))
 	    if l:wasLastJumpBufferStop
-		call s:DoJump(l:count, a:isNewer)
+		call s:DoJump(l:jumpCount, a:isNewer)
 	    else
 		" Memorize the current jump command, context, target and time
 		" (except for the [count], which is stored separately) to be
