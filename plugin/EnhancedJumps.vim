@@ -4,12 +4,13 @@
 "   - Requires Vim 7.0 or higher. 
 "   - EchoWithoutScrolling.vim autoload script.  
 "
-" Copyright: (C) 2009-2010 by Ingo Karkat
+" Copyright: (C) 2009-2011 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.14.010	13-Sep-2011	Better way to beep. 
 "   1.13.009	16-Jul-2010	BUG: Jump opened fold at current position when
 "				"No newer/older jump position" error occurred.
 "				Now checking whether the jump actually was
@@ -246,7 +247,7 @@ function! s:Jump( isNewer )
 		echohl None
 
 		" Signal edge case via beep. 
-		execute "normal \<Plug>IngoJumpsBell" 
+		execute "normal! \<C-\>\<C-n>\<Esc>"
 
 		" We stop here, and do not execute the actual jump command. 
 		return
