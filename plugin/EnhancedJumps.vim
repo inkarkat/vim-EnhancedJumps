@@ -4,12 +4,18 @@
 "   - Requires Vim 7.0 or higher. 
 "   - EchoWithoutScrolling.vim autoload script.  
 "
-" Copyright: (C) 2009 by Ingo Karkat
+" Copyright: (C) 2009-2010 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.13.009	16-Jul-2010	BUG: Jump opened fold at current position when
+"				"No newer/older jump position" error occurred.
+"				Now checking whether the jump actually was
+"				successful in s:DoJump(), and not just relying
+"				on the Vim error that only occurs when there's
+"				an invalid jump position. 
 "   1.12.008	17-Jul-2009	BF: Trailing space after the command to open the
 "				folds accidentally moved cursor one position to
 "				the right of the jump target. 
@@ -128,9 +134,22 @@ function! s:ParseJumpLine( jumpLine )
     let l:parseResult = matchlist(a:jumpLine, '^>\?\s*\d\+\s\+\(\d\+\)\s\+\(\d\+\)\s\+\(.*\)$')[1:3]
     return (len(l:parseResult) == 3 ? l:parseResult : [0, 0, ''])
 endfunction
+function! s:RecordPosition()
+    " The position record consists of the current cursor position and the buffer
+    " number. 
+    return getpos('.') + [bufnr('')]
+endfunction  
 function! s:DoJump( count, isNewer )
     try
+	" There's just a beep when there's no newer/older jump position; this is
+	" not a Vim error, so no exception is thrown. 
+	" We check the position before and after the jump to detect its success
+	" in all cases. 
+	let l:originalPosition = s:RecordPosition()
 	execute 'normal!' a:count . (a:isNewer ? "\<C-i>" : "\<C-o>")
+	if s:RecordPosition() == l:originalPosition
+	    return 0
+	endif
 
 	" When typed, CTRL-I/O open the fold at the jump target, but inside a
 	" mapping or :normal this must be done explicitly via 'zv'. 
@@ -138,10 +157,12 @@ function! s:DoJump( count, isNewer )
 	
 	return 1
     catch /^Vim\%((\a\+)\)\=:E/
-	echohl ErrorMsg
+	" A Vim error occurs when there's an invalid jump position. 
+
 	" v:exception contains what is normally in v:errmsg, but with extra
 	" exception source info prepended, which we cut away. 
 	let v:errmsg = substitute(v:exception, '^Vim\%((\a\+)\)\=:', '', '')
+	echohl ErrorMsg
 	echomsg v:errmsg
 	echohl None
 	return 0
