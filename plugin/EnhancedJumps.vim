@@ -279,27 +279,25 @@ function! s:Echo( fileJumpMessage, message )
 	echomsg a:fileJumpMessage
 	echo a:message
     else
-	echomsg a:fileJumpMessage
+    echomsg a:fileJumpMessage . ' '
 	echon a:message
     endif
 endfunction
 function! s:EchoFollowingMessage( followingJump, jumpDirection, filterName, fileJumpMessage )
-    let l:prefix = (empty(a:fileJumpMessage) ? '' : ' ')
-
     let l:following = s:ParseJumpLine(a:followingJump)
     if empty(a:followingJump)
-	call s:Echo(a:fileJumpMessage, l:prefix . printf('No %s%s jump position', a:jumpDirection, a:filterName))
+	call s:Echo(a:fileJumpMessage, printf('No %s%s jump position', a:jumpDirection, a:filterName))
     elseif s:IsInvalid(l:following.text)
-	call s:Echo(a:fileJumpMessage, l:prefix . printf('Next%s jump position is invalid', a:filterName))
+	call s:Echo(a:fileJumpMessage, printf('Next%s jump position is invalid', a:filterName))
     elseif s:IsJumpInCurrentBuffer(l:following)
 	if ! empty(a:fileJumpMessage) | throw 'ASSERT: Expecting empty a:fileJumpMessage for current buffer jump' | endif
 	let l:header = printf('next%s: %d,%d ', a:filterName, l:following.lnum, l:following.col)
 	call s:Echo(a:fileJumpMessage, l:header)
 	echohl Directory
-	echon EchoWithoutScrolling#Truncate(l:following.text, strlen(l:header))	" l:header is printable ASCII-only, so can use strlen() for text width. 
+	echon EchoWithoutScrolling#Truncate(l:following.text, strlen(l:header))	| " l:header is printable ASCII-only, so can use strlen() for text width. 
 	echohl None
     else
-	call s:Echo(a:fileJumpMessage, EchoWithoutScrolling#Truncate(l:prefix . printf('next%s: %s', a:filterName, s:BufferName(l:following.text))))
+	call s:Echo(a:fileJumpMessage, EchoWithoutScrolling#Truncate(printf('next%s: %s', a:filterName, s:BufferName(l:following.text))))
     endif
 endfunction
 function! s:Jump( isNewer, filter )
@@ -358,6 +356,7 @@ function! s:Jump( isNewer, filter )
 
 		" The captured file jump message somehow has newlines prepended;
 		" these must be cleaned up. 
+		echomsg '***' string(l:fileJumpMessage)
 		let l:fileJumpMessage = substitute(l:fileJumpMessage, "\n", '', 'g')
 
 		call s:EchoFollowingMessage(l:followingJump, l:jumpDirection, l:filterName, l:fileJumpMessage)
