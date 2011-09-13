@@ -10,12 +10,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
-"   1.20.011	14-Sep-2011	Implement "local jumps" and "remote jumps"
-"				varieties: 
-"				Change signature of s:IsJumpInCurrentBuffer() to
-"				be suitable for directly accepting
-"				s:ParseJumpLine() results. 
-"				Make s:ParseJumpLine() return object to allow
+"   1.20.012	14-Sep-2011	Make s:ParseJumpLine() return object to allow
 "				easier access to attributes without array
 "				slicing. 
 "				Differentiate between (given) count and
@@ -26,6 +21,24 @@
 "				s:DoJump() must now check for count = 0 because
 "				of filtering. 
 "				Add filter name to all user messages. 
+"				Redefine l:jumps to only contain the jumps in
+"				the jump direction via
+"				s:SliceJumpsInDirection(). This obviates the
+"				index arithmetic, duplicated checks for current
+"				index marker, and enhances the filter
+"				performance, because the unnecessary part in the
+"				opposite direction doesn't need to be processed. 
+"				Make newer remote jumps also jump to the latest
+"				file position, as this is more useful. 
+"				FIX: By just considering file names,
+"				s:RemoveDuplicateSubsequentFiles() collapsed
+"				jumps where there was a local jump in between.
+"				Now also checking for sequential jump count. 
+"   1.20.011	13-Sep-2011	Implement "local jumps" and "remote jumps"
+"				varieties: 
+"				Change signature of s:IsJumpInCurrentBuffer() to
+"				be suitable for directly accepting
+"				s:ParseJumpLine() results. 
 "   1.14.010	13-Sep-2011	Better way to beep. 
 "   1.13.009	16-Jul-2010	BUG: Jump opened fold at current position when
 "				"No newer/older jump position" error occurred.
@@ -127,27 +140,29 @@ function! s:SliceJumpsInDirection( jumps, isNewer )
 	return (l:currentIndex == 0 ? [] : reverse(a:jumps[ : (l:currentIndex - 1)]))
     endif
 endfunction
-function! s:IsJumpNotInCurrentBuffer( jumpLine )
-    " For proper indexing, we must include the current jump line in the results. 
-    return (a:jumpLine[0] ==# '>' || ! s:IsJumpInCurrentBuffer(s:ParseJumpLine(a:jumpLine)))
-endfunction
 function! s:RemoveDuplicateSubsequentFiles( isNewer, jumps )
-    " Filtering is done in jump direction, so that we jump to the last file
-    " position when jumping to older files, and to the first file position when
-    " jumping to newer files. 
+    " Always jump to the latest file position, also when jumping to newer files.
+    " This way, the same position is maintained when jumping older and newer.
+    " Otherwise, the newer jumps would always start at the top of the file (or
+    " remembered file position) - not very useful. 
     let l:uniqueJumps = []
-    let l:prevFile = ''
-    for l:i in (a:isNewer ? range(len(a:jumps)) : range(len(a:jumps) - 1, 0, -1))
-	let l:currentFile = s:ParseJumpLine(a:jumps[l:i]).text
-	" Include current index and different files. 
-	if a:jumps[l:i][0] ==# '>' || l:currentFile !=# l:prevFile
+    let l:prevParsedJump = s:ParseJumpLine('')
+    for l:i in (a:isNewer ?
+    \	range(len(a:jumps) - 1, 0, -1) :
+    \	range(len(a:jumps))
+    \)
+	let l:currentParsedJump = s:ParseJumpLine(a:jumps[l:i])
+	" Include the current jump if it's a different file or there are other
+	" local jumps in between (i.e. the jump counts are not sequential). 
+	if l:currentParsedJump.text !=# l:prevParsedJump.text ||
+	\   l:currentParsedJump.count != (l:prevParsedJump.count + (a:isNewer ? -1 : 1))
 	    if a:isNewer
-		call add(l:uniqueJumps, a:jumps[l:i])
-	    else
 		call insert(l:uniqueJumps, a:jumps[l:i], 0)
+	    else
+		call add(l:uniqueJumps, a:jumps[l:i])
 	    endif
 	endif
-	let l:prevFile = l:currentFile
+	let l:prevParsedJump = l:currentParsedJump
     endfor
 
     return l:uniqueJumps
@@ -159,7 +174,7 @@ function! s:FilterJumps( jumps, filter, isNewer )
 	return filter(a:jumps, 's:IsJumpInCurrentBuffer(s:ParseJumpLine(v:val))')
     elseif a:filter ==# 'remote'
 	return s:RemoveDuplicateSubsequentFiles(a:isNewer, 
-	\   filter(a:jumps, 's:IsJumpNotInCurrentBuffer(v:val)')
+	\   filter(a:jumps, '! s:IsJumpInCurrentBuffer(s:ParseJumpLine(v:val))')
 	\)
     else
 	throw 'ASSERT: Unknown filter type ' . string(a:filter)
