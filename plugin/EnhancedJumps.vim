@@ -20,6 +20,12 @@
 "				slicing. 
 "				Differentiate between (given) count and
 "				jumpCount when filtering. 
+"				Make remote jumps move to individual, different
+"				files, so that remote jumps with [count] work as
+"				expected. 
+"				s:DoJump() must now check for count = 0 because
+"				of filtering. 
+"				Add filter name to all user messages. 
 "   1.14.010	13-Sep-2011	Better way to beep. 
 "   1.13.009	16-Jul-2010	BUG: Jump opened fold at current position when
 "				"No newer/older jump position" error occurred.
@@ -89,14 +95,36 @@ function! s:IsJumpNotInCurrentBuffer( jumpLine )
     " For proper indexing, we must include the current jump line in the results. 
     return (a:jumpLine[0] ==# '>' || ! s:IsJumpInCurrentBuffer(s:ParseJumpLine(a:jumpLine)))
 endfunction
-function! s:FilterJumps( jumps, filter )
+function! s:RemoveDuplicateSubsequentFiles( isNewer, jumps )
+    " Filtering is done in jump direction, so that we jump to the last file
+    " position when jumping to older files, and to the first file position when
+    " jumping to newer files. 
+    let l:uniqueJumps = []
+    let l:prevFile = ''
+    for l:i in (a:isNewer ? range(len(a:jumps)) : range(len(a:jumps) - 1, 0, -1))
+	let l:currentFile = s:ParseJumpLine(a:jumps[l:i]).text
+	" Include current index and different files. 
+	if a:jumps[l:i][0] ==# '>' || l:currentFile !=# l:prevFile
+	    if a:isNewer
+		call add(l:uniqueJumps, a:jumps[l:i])
+	    else
+		call insert(l:uniqueJumps, a:jumps[l:i], 0)
+	    endif
+	endif
+	let l:prevFile = l:currentFile
+    endfor
+
+    return l:uniqueJumps
+endfunction
+function! s:FilterJumps( jumps, filter, isNewer )
     if empty(a:filter)
 	return a:jumps
     elseif a:filter ==# 'local'
 	return filter(a:jumps, 's:IsJumpInCurrentBuffer(s:ParseJumpLine(v:val))')
     elseif a:filter ==# 'remote'
-	" TODO: filter duplicate subsequent files (in jump direction)
-	return filter(a:jumps, 's:IsJumpNotInCurrentBuffer(v:val)')
+	return s:RemoveDuplicateSubsequentFiles(a:isNewer, 
+	\   filter(a:jumps, 's:IsJumpNotInCurrentBuffer(v:val)')
+	\)
     else
 	throw 'ASSERT: Unknown filter type ' . string(a:filter)
     endif
@@ -173,6 +201,11 @@ function! s:RecordPosition()
     return getpos('.') + [bufnr('')]
 endfunction  
 function! s:DoJump( count, isNewer )
+    if a:count == 0
+	execute "normal! \<C-\>\<C-n>\<Esc>"
+	return 0
+    endif
+
     try
 	" There's just a beep when there's no newer/older jump position; this is
 	" not a Vim error, so no exception is thrown. 
@@ -204,7 +237,7 @@ endfunction
 function! s:Jump( isNewer, filter )
     let l:filterName = (empty(a:filter) ? '' : ' ' . a:filter)
     let l:jumpDirection = (a:isNewer ? 'newer' : 'older')
-    let l:jumps = s:FilterJumps(s:GetJumps(), a:filter)
+    let l:jumps = s:FilterJumps(s:GetJumps(), a:filter, a:isNewer)
     let l:currentIndex = s:GetCurrentIndex(l:jumps)
     let l:count = s:GetCount()
 
