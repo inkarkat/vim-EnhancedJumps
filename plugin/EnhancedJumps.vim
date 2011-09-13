@@ -10,11 +10,16 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
-"   1.20.011	13-Sep-2011	Implement "local jumps" and "remote jumps"
+"   1.20.011	14-Sep-2011	Implement "local jumps" and "remote jumps"
 "				varieties: 
 "				Change signature of s:IsJumpInCurrentBuffer() to
 "				be suitable for directly accepting
 "				s:ParseJumpLine() results. 
+"				Make s:ParseJumpLine() return object to allow
+"				easier access to attributes without array
+"				slicing. 
+"				Differentiate between (given) count and
+"				jumpCount when filtering. 
 "   1.14.010	13-Sep-2011	Better way to beep. 
 "   1.13.009	16-Jul-2010	BUG: Jump opened fold at current position when
 "				"No newer/older jump position" error occurred.
@@ -90,6 +95,7 @@ function! s:FilterJumps( jumps, filter )
     elseif a:filter ==# 'local'
 	return filter(a:jumps, 's:IsJumpInCurrentBuffer(s:ParseJumpLine(v:val))')
     elseif a:filter ==# 'remote'
+	" TODO: filter duplicate subsequent files (in jump direction)
 	return filter(a:jumps, 's:IsJumpNotInCurrentBuffer(v:val)')
     else
 	throw 'ASSERT: Unknown filter type ' . string(a:filter)
@@ -137,8 +143,7 @@ function! s:IsInvalid( text )
     endif
 endfunction
 function! s:IsJumpInCurrentBuffer( parsedJump )
-    let l:text = a:parsedJump[3]
-    if empty(l:text)
+    if empty(a:parsedJump.text)
 	" In case there is no jump text, the corresponding line in the current
 	" buffer also should be empty. 
 	let l:regexp = '^$'
@@ -147,16 +152,20 @@ function! s:IsJumpInCurrentBuffer( parsedJump )
 	" characters rendered as ^X (so any ^X substring may either represent a
 	" non-printable single character or the literal two-character ^X
 	" sequence). The regexp has to consider this. 
-	let l:regexp = '\V' . substitute(escape(l:text, '\'), '\^\%(\\\\\|\p\)', '\\%(\0\\|\\.\\)', 'g')
+	let l:regexp = '\V' . substitute(escape(a:parsedJump.text, '\'), '\^\%(\\\\\|\p\)', '\\%(\0\\|\\.\\)', 'g')
     endif
 "****D echomsg '****' l:regexp
-    let l:line = a:parsedJump[1]
-    return getline(l:line) =~# l:regexp
+    return getline(a:parsedJump.lnum) =~# l:regexp
 endfunction
 function! s:ParseJumpLine( jumpLine )
-    " Parse one line of output from :jumps into count, lnum, col, text. 
-    let l:parsedJump = matchlist(a:jumpLine, '^>\?\s*\(\d\+\)\s\+\(\d\+\)\s\+\(\d\+\)\s\+\(.*\)$')[1:4]
-    return (len(l:parsedJump) == 4 ? l:parsedJump : [0, 0, 0, ''])
+    " Parse one line of output from :jumps into object with count, lnum, col, text. 
+    let l:parseResult = matchlist(a:jumpLine, '^>\?\s*\(\d\+\)\s\+\(\d\+\)\s\+\(\d\+\)\s\+\(.*\)$')
+    return {
+    \	'count': get(l:parseResult, 1, 0),
+    \	'lnum' : get(l:parseResult, 2, 0),
+    \	'col'  : get(l:parseResult, 3, 0),
+    \	'text' : get(l:parseResult, 4, '')
+    \}
 endfunction
 function! s:RecordPosition()
     " The position record consists of the current cursor position and the buffer
@@ -193,6 +202,7 @@ function! s:DoJump( count, isNewer )
     endtry
 endfunction
 function! s:Jump( isNewer, filter )
+    let l:filterName = (empty(a:filter) ? '' : ' ' . a:filter)
     let l:jumpDirection = (a:isNewer ? 'newer' : 'older')
     let l:jumps = s:FilterJumps(s:GetJumps(), a:filter)
     let l:currentIndex = s:GetCurrentIndex(l:jumps)
@@ -202,19 +212,18 @@ function! s:Jump( isNewer, filter )
     let l:followingIndex = l:targetIndex + (a:isNewer ? 1 : -1)
     let l:targetJump = (l:targetIndex < 0 ? '' : get(l:jumps, l:targetIndex, ''))
     let l:followingJump = (l:followingIndex < 0 ? '' : get(l:jumps, l:followingIndex, ''))
-echomsg '****' l:targetIndex l:targetJump
-echomsg '****' l:followingIndex l:followingJump
+"****D echomsg '****' l:targetIndex l:targetJump
+"****D echomsg '****' l:followingIndex l:followingJump
     " In case of filtering the count for the jump command does not correspond to
     " the given count and must be retrieved from the jump line. 
-    let l:jumpCount = (empty(a:filter) ? l:count : s:ParseJumpLine(l:targetJump)[0])
-echomsg '****' l:count l:jumpCount
-
+    let l:jumpCount = (empty(a:filter) ? l:count : s:ParseJumpLine(l:targetJump).count)
+"****D echomsg '****' l:count l:jumpCount
     if empty(l:targetJump)
 	let l:countMax = (a:isNewer ? len(l:jumps) - l:currentIndex - 1: l:currentIndex)
 	if l:countMax == 0
-	    let v:errmsg = printf('No %s jump position', l:jumpDirection)
+	    let v:errmsg = printf('No %s%s jump position', l:jumpDirection, l:filterName)
 	else
-	    let v:errmsg = printf('Only %d %s jump position%s', l:countMax, l:jumpDirection, (l:countMax > 1 ? 's' : ''))
+	    let v:errmsg = printf('Only %d %s%s jump position%s', l:countMax, l:jumpDirection, l:filterName, (l:countMax > 1 ? 's' : ''))
 	endif
 	echohl ErrorMsg
 	echomsg v:errmsg
@@ -225,32 +234,30 @@ echomsg '****' l:count l:jumpCount
 	" beep. 
 	call s:DoJump(l:jumpCount, a:isNewer)
     else
-	let l:targetParsedJump = s:ParseJumpLine(l:targetJump)
-	let [l:targetLine, l:targetCol, l:targetText] = l:targetParsedJump[1:3]
-	if s:IsInvalid(l:targetText)
+	let l:target = s:ParseJumpLine(l:targetJump)
+	if s:IsInvalid(l:target.text)
 	    " Do nothing here, the jump command will print an error. 
 	    call s:DoJump(l:jumpCount, a:isNewer)
-	elseif s:IsJumpInCurrentBuffer(l:targetParsedJump)
+	elseif s:IsJumpInCurrentBuffer(l:target)
 	    " To avoid that the jump command's output overwrites the indication
 	    " of the next jump position, the jump command is executed first and
 	    " the indication only printed if the jump didn't cause an error. 
 	    if s:DoJump(l:jumpCount, a:isNewer)
-		let l:followingParsedJump = s:ParseJumpLine(l:followingJump)
-		let [l:followingLine, l:followingCol, l:followingText] = l:followingParsedJump[1:3]
+		let l:following = s:ParseJumpLine(l:followingJump)
 		if empty(l:followingJump)
 		    redraw
-		    echo printf('No %s jump position', l:jumpDirection)
-		elseif s:IsInvalid(l:followingText)
+		    echo printf('No %s%s jump position', l:jumpDirection, l:filterName)
+		elseif s:IsInvalid(l:following.text)
 		    redraw
-		    echo 'Next jump position is invalid'
-		elseif s:IsJumpInCurrentBuffer(l:followingParsedJump)
-		    let l:header = printf('next: %d,%d ', l:followingLine, l:followingCol)
+		    echo printf('Next%s jump position is invalid', l:filterName)
+		elseif s:IsJumpInCurrentBuffer(l:following)
+		    let l:header = printf('next%s: %d,%d ', l:filterName, l:following.lnum, l:following.col)
 		    echo l:header
 		    echohl Directory
-		    echon EchoWithoutScrolling#Truncate(l:followingText, strlen(l:header))
+		    echon EchoWithoutScrolling#Truncate(l:following.text, strlen(l:header))
 		    echohl None
 		else
-		    call EchoWithoutScrolling#Echo(printf('next: %s', s:BufferName(l:followingText)))
+		    call EchoWithoutScrolling#Echo(printf('next%s: %s', l:filterName, s:BufferName(l:following.text)))
 		endif
 	    endif
 	else
@@ -259,21 +266,21 @@ echomsg '****' l:count l:jumpCount
 	    " repeating the original [count] or completely omitting it) is
 	    " executed once more immediately afterwards. 
 	    let l:isSameCountAsLast = (! v:count || (exists('t:lastJumpCommandCount') && t:lastJumpCommandCount == v:count1))
-	    let l:wasLastJumpBufferStop = l:isSameCountAsLast && (exists('t:lastJumpBufferStop') && s:WasLastStop([a:isNewer, winnr(), l:targetText, localtime()], t:lastJumpBufferStop))
-	    if l:wasLastJumpBufferStop
+	    let l:wasLastJumpBufferStop = l:isSameCountAsLast && (exists('t:lastJumpBufferStop') && s:WasLastStop([a:isNewer, winnr(), l:target.text, localtime()], t:lastJumpBufferStop))
+	    if l:wasLastJumpBufferStop || ! empty(a:filter)
 		call s:DoJump(l:jumpCount, a:isNewer)
 	    else
 		" Memorize the current jump command, context, target and time
 		" (except for the [count], which is stored separately) to be
 		" able to detect the same jump command. 
-		let t:lastJumpBufferStop = [a:isNewer, winnr(), l:targetText, localtime()]
+		let t:lastJumpBufferStop = [a:isNewer, winnr(), l:target.text, localtime()]
 
 		" Memorize the given [count] to detect the same jump command,
 		" and that it need not be specified on the repetition of the
 		" jump command to overcome the warning. 
 		let t:lastJumpCommandCount = l:count
 
-		let v:warningmsg = 'next: ' . s:BufferName(l:targetText)
+		let v:warningmsg = printf('next%s: %s', l:filterName, s:BufferName(l:target.text))
 		echohl WarningMsg
 		echomsg v:warningmsg
 		echohl None
