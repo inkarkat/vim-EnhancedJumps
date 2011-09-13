@@ -3,9 +3,9 @@
 		       ENHANCED JUMPS    by Ingo Karkat
 							   *EnhancedJumps.vim*
 description			|EnhancedJumps-description|
-usage	    			|EnhancedJumps-usage|
-installation   			|EnhancedJumps-installation|
-configuration  			|EnhancedJumps-configuration|
+usage				|EnhancedJumps-usage|
+installation			|EnhancedJumps-installation|
+configuration			|EnhancedJumps-configuration|
 limitations			|EnhancedJumps-limitations|
 known problems			|EnhancedJumps-known-problems|
 todo				|EnhancedJumps-todo|
@@ -89,6 +89,14 @@ IDEAS							 *EnhancedJumps-ideas*
 ==============================================================================
 HISTORY						       *EnhancedJumps-history*
 
+1.13	16-Jul-2010
+BUG: Jump opened fold at current position when "No newer/older jump position"
+error occurred.
+
+1.12    17-Jul-2009
+BF: Trailing space after the command to open the folds accidentally moved
+cursor one position to the right of the jump target. 
+
 1.11	14-Jul-2009
 BF: A '^\)' in the jump text caused "E55: Unmatched \)"
 
@@ -103,7 +111,7 @@ BF: A '^\)' in the jump text caused "E55: Unmatched \)"
 First published version. 
 
 ==============================================================================
-Copyright: (C) 2009 by Ingo Karkat
+Copyright: (C) 2009-2010 Ingo Karkat
 The VIM LICENSE applies to this script; see|copyright|. 
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
