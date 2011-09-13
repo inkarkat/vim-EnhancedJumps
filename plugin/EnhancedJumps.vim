@@ -272,32 +272,33 @@ function! s:DoJump( count, isNewer )
 	return 0
     endtry
 endfunction
-function! s:Echo( fileJumpMessage, message )
-    if empty(a:fileJumpMessage)
+function! s:Echo( fileJumpMessages, message )
+    if empty(a:fileJumpMessages)
 	echo a:message
-    elseif &cmdheight > 1
-	echomsg a:fileJumpMessage
+    elseif &cmdheight > 1 || len(a:fileJumpMessages) > 1
+	for l:message in a:fileJumpMessages
+	    echomsg l:message
+	endfor
 	echo a:message
     else
-    echomsg a:fileJumpMessage . ' '
+	echomsg a:fileJumpMessages[0] . ' '
 	echon a:message
     endif
 endfunction
-function! s:EchoFollowingMessage( followingJump, jumpDirection, filterName, fileJumpMessage )
+function! s:EchoFollowingMessage( followingJump, jumpDirection, filterName, fileJumpMessages )
     let l:following = s:ParseJumpLine(a:followingJump)
     if empty(a:followingJump)
-	call s:Echo(a:fileJumpMessage, printf('No %s%s jump position', a:jumpDirection, a:filterName))
+	call s:Echo(a:fileJumpMessages, printf('No %s%s jump position', a:jumpDirection, a:filterName))
     elseif s:IsInvalid(l:following.text)
-	call s:Echo(a:fileJumpMessage, printf('Next%s jump position is invalid', a:filterName))
+	call s:Echo(a:fileJumpMessages, printf('Next%s jump position is invalid', a:filterName))
     elseif s:IsJumpInCurrentBuffer(l:following)
-	if ! empty(a:fileJumpMessage) | throw 'ASSERT: Expecting empty a:fileJumpMessage for current buffer jump' | endif
 	let l:header = printf('next%s: %d,%d ', a:filterName, l:following.lnum, l:following.col)
-	call s:Echo(a:fileJumpMessage, l:header)
+	call s:Echo(a:fileJumpMessages, l:header)
 	echohl Directory
 	echon EchoWithoutScrolling#Truncate(l:following.text, strlen(l:header))	| " l:header is printable ASCII-only, so can use strlen() for text width. 
 	echohl None
     else
-	call s:Echo(a:fileJumpMessage, EchoWithoutScrolling#Truncate(printf('next%s: %s', a:filterName, s:BufferName(l:following.text))))
+	call s:Echo(a:fileJumpMessages, EchoWithoutScrolling#Truncate(printf('next%s: %s', a:filterName, s:BufferName(l:following.text))))
     endif
 endfunction
 function! s:Jump( isNewer, filter )
@@ -350,16 +351,16 @@ function! s:Jump( isNewer, filter )
 	    let l:isSameCountAsLast = (! v:count || (exists('t:lastJumpCommandCount') && t:lastJumpCommandCount == v:count1))
 	    let l:wasLastJumpBufferStop = l:isSameCountAsLast && (exists('t:lastJumpBufferStop') && s:WasLastStop([a:isNewer, winnr(), l:target.text, localtime()], t:lastJumpBufferStop))
 	    if l:wasLastJumpBufferStop || ! empty(a:filter)
-		redir => l:fileJumpMessage
+		redir => l:fileJumpCapture
 		silent call s:DoJump(l:jumpCount, a:isNewer)
 		redir END
 
-		" The captured file jump message somehow has newlines prepended;
-		" these must be cleaned up. 
-		echomsg '***' string(l:fileJumpMessage)
-		let l:fileJumpMessage = substitute(l:fileJumpMessage, "\n", '', 'g')
-
-		call s:EchoFollowingMessage(l:followingJump, l:jumpDirection, l:filterName, l:fileJumpMessage)
+		call s:EchoFollowingMessage(l:followingJump, l:jumpDirection, l:filterName,
+		\   filter(
+		\	split(l:fileJumpCapture, "\n"),
+		\	'! empty(v:val)'
+		\   )
+		\)
 	    else
 		" Memorize the current jump command, context, target and time
 		" (except for the [count], which is stored separately) to be
