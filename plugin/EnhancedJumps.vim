@@ -91,6 +91,42 @@ function! s:GetJumps()
 
     return split(l:jumpsOutput, "\n")[1:] " The first line contains the header. 
 endfunction
+function! s:GetCurrentIndex( jumps )
+    let l:currentIndex = -1
+    " Note: The linear search starts from the end because it's more likely that
+    " the user hasn't navigated to the oldest entries in the jump list. 
+    for l:i in reverse(range(len(a:jumps)))
+	if a:jumps[l:i][0] ==# '>'
+	    let l:currentIndex = l:i
+	    break
+	endif
+    endfor
+    if l:currentIndex < 0 | throw 'ASSERT: :jumps command contains > marker' | endif
+    return l:currentIndex
+endfunction
+function! s:SliceJumpsInDirection( jumps, isNewer )
+"******************************************************************************
+"* PURPOSE:
+"   From the list of jumps, keep only those following the current index in the
+"   direction of jump, and reverse older jumps so that the jump index directly
+"   corresponds to the count of the jump. 
+"* ASSUMPTIONS / PRECONDITIONS:
+"   None. 
+"* EFFECTS / POSTCONDITIONS:
+"   None. 
+"* INPUTS:
+"   a:jumps List of jump lines from :jumps command. 
+"   a:isNewer	Flag whether the jump is to newer jumps. 
+"* RETURN VALUES: 
+"   Rearranged slice of jumps; the jump index corresponds to the jump count. 
+"******************************************************************************
+    let l:currentIndex = s:GetCurrentIndex(a:jumps)
+    if a:isNewer
+	return a:jumps[(l:currentIndex + 1) : ]
+    else
+	return (l:currentIndex == 0 ? [] : reverse(a:jumps[ : (l:currentIndex - 1)]))
+    endif
+endfunction
 function! s:IsJumpNotInCurrentBuffer( jumpLine )
     " For proper indexing, we must include the current jump line in the results. 
     return (a:jumpLine[0] ==# '>' || ! s:IsJumpInCurrentBuffer(s:ParseJumpLine(a:jumpLine)))
@@ -128,19 +164,6 @@ function! s:FilterJumps( jumps, filter, isNewer )
     else
 	throw 'ASSERT: Unknown filter type ' . string(a:filter)
     endif
-endfunction
-function! s:GetCurrentIndex( jumps )
-    let l:currentIndex = -1
-    " Note: The linear search starts from the end because it's more likely that
-    " the user hasn't navigated to the oldest entries in the jump list. 
-    for l:i in reverse(range(len(a:jumps)))
-	if a:jumps[l:i][0] ==# '>'
-	    let l:currentIndex = l:i
-	    break
-	endif
-    endfor
-    if l:currentIndex < 0 | throw 'ASSERT: :jumps command contains > marker' | endif
-    return l:currentIndex
 endfunction
 function! s:GetCount()
     " Determine whether this is a repetition of the same jump command that got
@@ -237,22 +260,20 @@ endfunction
 function! s:Jump( isNewer, filter )
     let l:filterName = (empty(a:filter) ? '' : ' ' . a:filter)
     let l:jumpDirection = (a:isNewer ? 'newer' : 'older')
-    let l:jumps = s:FilterJumps(s:GetJumps(), a:filter, a:isNewer)
-    let l:currentIndex = s:GetCurrentIndex(l:jumps)
+
+    let l:jumps = s:FilterJumps(s:SliceJumpsInDirection(s:GetJumps(), a:isNewer), a:filter, a:isNewer)
     let l:count = s:GetCount()
 
-    let l:targetIndex = l:currentIndex + (a:isNewer ? 1 : -1) * l:count
-    let l:followingIndex = l:targetIndex + (a:isNewer ? 1 : -1)
-    let l:targetJump = (l:targetIndex < 0 ? '' : get(l:jumps, l:targetIndex, ''))
-    let l:followingJump = (l:followingIndex < 0 ? '' : get(l:jumps, l:followingIndex, ''))
-"****D echomsg '****' l:targetIndex l:targetJump
-"****D echomsg '****' l:followingIndex l:followingJump
+    let l:targetJump = get(l:jumps, l:count - 1, '')
+    let l:followingJump = get(l:jumps, l:count, '')
+"****D echomsg '****' l:targetJump
+"****D echomsg '****' l:followingJump
     " In case of filtering the count for the jump command does not correspond to
     " the given count and must be retrieved from the jump line. 
     let l:jumpCount = (empty(a:filter) ? l:count : s:ParseJumpLine(l:targetJump).count)
 "****D echomsg '****' l:count l:jumpCount
     if empty(l:targetJump)
-	let l:countMax = (a:isNewer ? len(l:jumps) - l:currentIndex - 1: l:currentIndex)
+	let l:countMax = len(l:jumps)
 	if l:countMax == 0
 	    let v:errmsg = printf('No %s%s jump position', l:jumpDirection, l:filterName)
 	else
