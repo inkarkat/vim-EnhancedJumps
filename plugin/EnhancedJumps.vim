@@ -272,6 +272,36 @@ function! s:DoJump( count, isNewer )
 	return 0
     endtry
 endfunction
+function! s:Echo( fileJumpMessage, message )
+    if empty(a:fileJumpMessage)
+	echo a:message
+    elseif &cmdheight > 1
+	echomsg a:fileJumpMessage
+	echo a:message
+    else
+	echomsg a:fileJumpMessage
+	echon a:message
+    endif
+endfunction
+function! s:EchoFollowingMessage( followingJump, jumpDirection, filterName, fileJumpMessage )
+    let l:prefix = (empty(a:fileJumpMessage) ? '' : ' ')
+
+    let l:following = s:ParseJumpLine(a:followingJump)
+    if empty(a:followingJump)
+	call s:Echo(a:fileJumpMessage, l:prefix . printf('No %s%s jump position', a:jumpDirection, a:filterName))
+    elseif s:IsInvalid(l:following.text)
+	call s:Echo(a:fileJumpMessage, l:prefix . printf('Next%s jump position is invalid', a:filterName))
+    elseif s:IsJumpInCurrentBuffer(l:following)
+	if ! empty(a:fileJumpMessage) | throw 'ASSERT: Expecting empty a:fileJumpMessage for current buffer jump' | endif
+	let l:header = printf('next%s: %d,%d ', a:filterName, l:following.lnum, l:following.col)
+	call s:Echo(a:fileJumpMessage, l:header)
+	echohl Directory
+	echon EchoWithoutScrolling#Truncate(l:following.text, strlen(l:header))	" l:header is printable ASCII-only, so can use strlen() for text width. 
+	echohl None
+    else
+	call s:Echo(a:fileJumpMessage, EchoWithoutScrolling#Truncate(l:prefix . printf('next%s: %s', a:filterName, s:BufferName(l:following.text))))
+    endif
+endfunction
 function! s:Jump( isNewer, filter )
     let l:filterName = (empty(a:filter) ? '' : ' ' . a:filter)
     let l:jumpDirection = (a:isNewer ? 'newer' : 'older')
@@ -312,22 +342,7 @@ function! s:Jump( isNewer, filter )
 	    " of the next jump position, the jump command is executed first and
 	    " the indication only printed if the jump didn't cause an error. 
 	    if s:DoJump(l:jumpCount, a:isNewer)
-		let l:following = s:ParseJumpLine(l:followingJump)
-		if empty(l:followingJump)
-		    redraw
-		    echo printf('No %s%s jump position', l:jumpDirection, l:filterName)
-		elseif s:IsInvalid(l:following.text)
-		    redraw
-		    echo printf('Next%s jump position is invalid', l:filterName)
-		elseif s:IsJumpInCurrentBuffer(l:following)
-		    let l:header = printf('next%s: %d,%d ', l:filterName, l:following.lnum, l:following.col)
-		    echo l:header
-		    echohl Directory
-		    echon EchoWithoutScrolling#Truncate(l:following.text, strlen(l:header))
-		    echohl None
-		else
-		    call EchoWithoutScrolling#Echo(printf('next%s: %s', l:filterName, s:BufferName(l:following.text)))
-		endif
+		call s:EchoFollowingMessage(l:followingJump, l:jumpDirection, l:filterName, '')
 	    endif
 	else
 	    " The next jump would move to another buffer. Stop and notify first,
@@ -337,7 +352,15 @@ function! s:Jump( isNewer, filter )
 	    let l:isSameCountAsLast = (! v:count || (exists('t:lastJumpCommandCount') && t:lastJumpCommandCount == v:count1))
 	    let l:wasLastJumpBufferStop = l:isSameCountAsLast && (exists('t:lastJumpBufferStop') && s:WasLastStop([a:isNewer, winnr(), l:target.text, localtime()], t:lastJumpBufferStop))
 	    if l:wasLastJumpBufferStop || ! empty(a:filter)
-		call s:DoJump(l:jumpCount, a:isNewer)
+		redir => l:fileJumpMessage
+		silent call s:DoJump(l:jumpCount, a:isNewer)
+		redir END
+
+		" The captured file jump message somehow has newlines prepended;
+		" these must be cleaned up. 
+		let l:fileJumpMessage = substitute(l:fileJumpMessage, "\n", '', 'g')
+
+		call s:EchoFollowingMessage(l:followingJump, l:jumpDirection, l:filterName, l:fileJumpMessage)
 	    else
 		" Memorize the current jump command, context, target and time
 		" (except for the [count], which is stored separately) to be
