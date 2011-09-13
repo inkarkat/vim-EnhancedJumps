@@ -34,6 +34,15 @@
 "				s:RemoveDuplicateSubsequentFiles() collapsed
 "				jumps where there was a local jump in between.
 "				Now also checking for sequential jump count. 
+"				Implement "next jump" message also for remote
+"				jumps by capturing the file jump message(s)
+"				(BufRead autocmds may be triggered and print
+"				messages, such as the IndentConsistencyCop
+"				plugin). Concatenate in one message line, or use
+"				a larger 'cmdheight' value. The tricky thing for
+"				the "remote" filter is that the following jump
+"				information can become wrong in an A->B->A
+"				scenario. 
 "   1.20.011	13-Sep-2011	Implement "local jumps" and "remote jumps"
 "				varieties: 
 "				Change signature of s:IsJumpInCurrentBuffer() to
@@ -141,6 +150,7 @@ function! s:SliceJumpsInDirection( jumps, isNewer )
     endif
 endfunction
 function! s:RemoveDuplicateSubsequentFiles( isNewer, jumps )
+"****D echo join(a:jumps, "\n")
     " Always jump to the latest file position, also when jumping to newer files.
     " This way, the same position is maintained when jumping older and newer.
     " Otherwise, the newer jumps would always start at the top of the file (or
@@ -164,7 +174,7 @@ function! s:RemoveDuplicateSubsequentFiles( isNewer, jumps )
 	endif
 	let l:prevParsedJump = l:currentParsedJump
     endfor
-
+"****D echo "****\n" join(l:uniqueJumps, "\n")
     return l:uniqueJumps
 endfunction
 function! s:FilterJumps( jumps, filter, isNewer )
@@ -354,6 +364,19 @@ function! s:Jump( isNewer, filter )
 		redir => l:fileJumpCapture
 		silent call s:DoJump(l:jumpCount, a:isNewer)
 		redir END
+
+		if a:filter ==# 'remote'
+		    " After the jump to another file, the filtered list for
+		    " remote files became wrong in case the following file is
+		    " the same as the original file (i.e. A(original) -> B(jump)
+		    " -> A(following)), because that jump was initially filtered
+		    "  out. To correctly determine the following jump, we must
+		    "  re-query and re-filter the jumps. 
+		    let l:followingJump = get(
+		    \	s:FilterJumps(s:SliceJumpsInDirection(s:GetJumps(), a:isNewer), a:filter, a:isNewer),
+		    \	0, ''
+		    \)
+		endif
 
 		call s:EchoFollowingMessage(l:followingJump, l:jumpDirection, l:filterName,
 		\   filter(
