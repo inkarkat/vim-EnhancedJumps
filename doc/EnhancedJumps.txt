@@ -78,7 +78,8 @@ LIMITATIONS					   *EnhancedJumps-limitations*
   the current buffer is not detected, and no warning given. 
 - If the jump target is in another buffer, and the current buffer contains
   that buffer's filespec at the target line, the jump outside the current
-  buffer is not detected, and no warning given. 
+  buffer is not detected, and no warning given. Same for empty buffers, viz.
+  "[No Name]". 
 
 KNOWN PROBLEMS					*EnhancedJumps-known-problems*
 
