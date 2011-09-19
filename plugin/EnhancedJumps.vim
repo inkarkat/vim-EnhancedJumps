@@ -367,11 +367,13 @@ function! s:Jump( isNewer, filter )
 
 		if a:filter ==# 'remote'
 		    " After the jump to another file, the filtered list for
-		    " remote files became wrong in case the following file is
+		    " remote files becomes wrong in case the following file is
 		    " the same as the original file (i.e. A(original) -> B(jump)
 		    " -> A(following)), because that jump was initially filtered
 		    "  out. To correctly determine the following jump, we must
 		    "  re-query and re-filter the jumps. 
+		    "  In addition, the file paths to the file may have changed
+		    "  due to changes in CWD / 'autochdir'. 
 		    let l:followingJump = get(
 		    \	s:FilterJumps(s:SliceJumpsInDirection(s:GetJumps(), a:isNewer), a:filter, a:isNewer),
 		    \	0, ''
