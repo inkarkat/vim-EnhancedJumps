@@ -1,0 +1,4 @@
+autoload/EchoWithoutScrolling.vim
+autoload/EnhancedJumps.vim
+plugin/EnhancedJumps.vim
+doc/EnhancedJumps.txt
