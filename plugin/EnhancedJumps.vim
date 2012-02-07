@@ -52,4 +52,4 @@ if ! hasmapto('<Plug>EnhancedJumpsRemoteNewer', 'n')
     nmap <Leader><C-i> <Plug>EnhancedJumpsRemoteNewer
 endif
 
-" vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
+" vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
