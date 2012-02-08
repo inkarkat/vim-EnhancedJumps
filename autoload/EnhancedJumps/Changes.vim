@@ -1,4 +1,4 @@
-" Changes.vim: summary
+" Changes.vim: Enhanced change list navigation commands. 
 "
 " DEPENDENCIES:
 "   - EnhancedJumps/Common.vim autoload script. 
@@ -10,6 +10,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   2.10.002	09-Feb-2012	Modify s:FilterNearJumps() algorithm. 
 "	001	08-Feb-2012	file creation
 let s:save_cpo = &cpo
 set cpo&vim
@@ -18,39 +19,29 @@ function! s:abs( num1, num2 )
     let l:difference = a:num1 - a:num2
     return (l:difference >= 0 ? l:difference : -1 * l:difference)
 endfunction
-function! s:FilterNearJumps( jumps, isNewer, startLnum, endLnum, nearHeight )
-"****D echo join(a:jumps, "\n")
-    " Always jump to the latest change position, also when jumping to newer
-    " changes.
-    " This way, the same position is maintained when jumping older and newer.
+function! s:FilterNearJumps( jumps, startLnum, endLnum, nearHeight )
+"****D echomsg '####' a:startLnum a:endLnum
     let l:farJumps = []
     let l:prevParsedJump = EnhancedJumps#Common#ParseJumpLine('')
     let l:prevParsedJump.lnum = -1 * (a:nearHeight + 1)
     let l:lastLnum = 0
-    let l:isFirstJump = 1
 
-    for l:i in (a:isNewer ?
-    \	range(len(a:jumps) - 1, 0, -1) :
-    \	range(len(a:jumps))
-    \)
+    for l:i in range(len(a:jumps))
 	let l:currentParsedJump = EnhancedJumps#Common#ParseJumpLine(a:jumps[l:i])
-	" Include the current jump if it's more than a:nearHeight lines away
-	" from the previous jump or from the last accepted jump. 
-	if l:isFirstJump && (
-	\	l:currentParsedJump.lnum < a:startLnum ||
-	\	l:currentParsedJump.lnum > a:endLnum
-	\   ) ||
-	\   ! l:isFirstJump && (
-	\	s:abs(l:currentParsedJump.lnum, l:prevParsedJump.lnum) > a:nearHeight ||
-	\	s:abs(l:currentParsedJump.lnum, l:lastLnum) > a:nearHeight
-	\   )
-	    if a:isNewer
-		call insert(l:farJumps, a:jumps[l:i], 0)
-	    else
-		call add(l:farJumps, a:jumps[l:i])
-	    endif
-	    let l:isFirstJump = 0
+	" Include the current jump if it's outside the currently visible range,
+	" and more than a:nearHeight lines away from the previous jump or from
+	" the last accepted jump. 
+"****D echomsg '****' l:currentParsedJump.lnum l:prevParsedJump.lnum l:lastLnum
+	if (
+	\   l:currentParsedJump.lnum < a:startLnum ||
+	\   l:currentParsedJump.lnum > a:endLnum
+	\) && (
+	\   s:abs(l:currentParsedJump.lnum, l:prevParsedJump.lnum) > a:nearHeight ||
+	\   s:abs(l:currentParsedJump.lnum, l:lastLnum) > a:nearHeight
+	\)
+	    call add(l:farJumps, a:jumps[l:i])
 	    let l:lastLnum = l:currentParsedJump.lnum
+"****D echomsg '**** accept'
 	endif
 	let l:prevParsedJump = l:currentParsedJump
     endfor
@@ -58,6 +49,13 @@ function! s:FilterNearJumps( jumps, isNewer, startLnum, endLnum, nearHeight )
     return l:farJumps
 endfunction
 
+function! s:warn( warningmsg )
+    redraw	" After the jump, a redraw is pending. Do it now or the message may vanish. 
+    let v:warningmsg = a:warningmsg
+    echohl WarningMsg
+    echomsg v:warningmsg
+    echohl None
+endfunction
 function! s:DoJump( count, isNewer )
     if a:count == 0
 	execute "normal! \<C-\>\<C-n>\<Esc>"
@@ -84,6 +82,7 @@ function! s:DoJump( count, isNewer )
 	return 0
     endtry
 endfunction
+
 function! EnhancedJumps#Changes#Jump( isNewer, isFallbackToNearChanges )
     let l:jumpDirection = (a:isNewer ? 'newer' : 'older')
     let l:count = v:count1
@@ -95,7 +94,6 @@ function! EnhancedJumps#Changes#Jump( isNewer, isFallbackToNearChanges )
     \	    EnhancedJumps#Common#GetJumps('changes'),
     \	    a:isNewer
     \	),
-    \	a:isNewer,
     \	l:startLnum, l:endLnum, l:nearHeight
     \)
 
@@ -105,29 +103,27 @@ function! EnhancedJumps#Changes#Jump( isNewer, isFallbackToNearChanges )
 	    if s:DoJump(l:count, a:isNewer)
 		" Only print the warning when the jump was successful; it may
 		" have already errored out with "At start / end of changelist". 
-		let v:warningmsg = printf('No %s far change', l:jumpDirection)
-		echohl WarningMsg
-		echomsg v:warningmsg
-		echohl None
+		call s:warn(printf('No %s far change', l:jumpDirection))
 	    endif
-
-	    return
 	else
 	    let v:errmsg = printf('No %s far change', l:jumpDirection)
 	    echohl ErrorMsg
 	    echomsg v:errmsg
 	    echohl None
+
+	    " Still execute the a zero-jump command to cause the customary beep. 
+	    call s:DoJump(0, a:isNewer)
 	endif
-	" We still execute the actual jump command, even though we've determined
-	" that it won't work. The jump command will still cause the customary
-	" beep. 
+
+	return
     endif
 
 "****D for j in l:jumps | echomsg j | endfor
     let l:isFallbackNearJump = 0
     let l:targetJump = get(l:jumps, l:count - 1, '')
     if empty(l:targetJump)
-	" Jump to the last available far jump. 
+	" Jump to the last available far jump, like the original 999g, jumps to
+	" the last change. 
 	let l:targetJump = get(l:jumps, -1, '')
 	let l:isFallbackNearJump = 1
     endif
@@ -139,11 +135,7 @@ function! EnhancedJumps#Changes#Jump( isNewer, isFallbackToNearChanges )
     if s:DoJump(l:jumpCount, a:isNewer) && l:isFallbackNearJump
 	" Only print the warning when the jump was successful; it may
 	" have already errored out with "At start / end of changelist". 
-	redraw	" After the jump, a redraw is pending. Do it now or the message may vanish. 
-	let v:warningmsg = printf('No more %d %s far changes', l:count, l:jumpDirection)
-	echohl WarningMsg
-	echomsg v:warningmsg
-	echohl None
+	call s:warn(printf('No more %d %s far changes', l:count, l:jumpDirection))
     endif
 endfunction
 
