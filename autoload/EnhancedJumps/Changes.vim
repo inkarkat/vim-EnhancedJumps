@@ -63,7 +63,7 @@ function! s:DoJump( count, isNewer )
 	execute "normal! \<C-\>\<C-n>\<Esc>"
 	return 0
     endif
-
+"****D echomsg '****' a:count . (a:isNewer ? 'g,' : 'g;')
     try
 	execute 'normal!' a:count . (a:isNewer ? 'g,' : 'g;')
 
@@ -124,27 +124,27 @@ function! EnhancedJumps#Changes#Jump( isNewer, isFallbackToNearChanges )
     endif
 
 "****D for j in l:jumps | echomsg j | endfor
+    let l:isFallbackNearJump = 0
     let l:targetJump = get(l:jumps, l:count - 1, '')
-    if empty(l:targetJump) && a:isFallbackToNearChanges
-	" Perform the first near jump after the last available far jump. 
-	let l:fallbackCount = get(l:jumps, -1, 0) + 1
-	if s:DoJump(l:fallbackCount, a:isNewer)
-	    " Only print the warning when the jump was successful; it may
-	    " have already errored out with "At start / end of changelist". 
-	    let v:warningmsg = printf('No more %d %s far changes', l:count, l:jumpDirection)
-	    echohl WarningMsg
-	    echomsg v:warningmsg
-	    echohl None
-	endif
-
-	return
+    if empty(l:targetJump)
+	" Jump to the last available far jump. 
+	let l:targetJump = get(l:jumps, -1, '')
+	let l:isFallbackNearJump = 1
     endif
 
     " Because of filtering the count for the jump command does not correspond to
     " the given count and must be retrieved from the jump line. 
     let l:jumpCount = EnhancedJumps#Common#ParseJumpLine(l:targetJump).count
 "****D echomsg '****' l:count l:jumpCount
-    call s:DoJump(l:jumpCount, a:isNewer)
+    if s:DoJump(l:jumpCount, a:isNewer) && l:isFallbackNearJump
+	" Only print the warning when the jump was successful; it may
+	" have already errored out with "At start / end of changelist". 
+	redraw	" After the jump, a redraw is pending. Do it now or the message may vanish. 
+	let v:warningmsg = printf('No more %d %s far changes', l:count, l:jumpDirection)
+	echohl WarningMsg
+	echomsg v:warningmsg
+	echohl None
+    endif
 endfunction
 
 let &cpo = s:save_cpo
