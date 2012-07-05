@@ -1,4 +1,4 @@
-*EnhancedJumps.txt*     Enhanced jump list navigation commands. 
+*EnhancedJumps.txt*     Enhanced jump and change list navigation commands. 
 
 		       ENHANCED JUMPS    by Ingo Karkat
 							   *EnhancedJumps.vim*
@@ -34,6 +34,13 @@ In addition to the enhanced jump commands, separate special mappings are
 available that restrict the jump targets to only local locations (in the same
 buffer) and remote locations (only in other buffers). 
 
+
+This plugin enhances the built-in |g;|/|g,| change list jump commands so that
+they skip jumps to previous / later edit locations that lie within the
+currently visible range. This makes it easier to navigate between distant
+edits in a large buffer, without having to manually skip over all the local
+changes. 
+
 ==============================================================================
 USAGE							 *EnhancedJumps-usage*
 
@@ -61,6 +68,24 @@ g<CTRL-O>, g<CTRL-I>	Go to [count] older / newer cursor position in the
 			Regardless of the jump direction, the last jump
 			position in a buffer is used when there are multiple
 			subsequent jumps in a buffer. 
+
+
+Simply use the |g;| and |g,| commands to go to an older / newer far change
+position in the change list. 
+
+g;			Go to [count] older far change (that lies outside the
+			currently visible range and is more than the current
+			window height lines away from the previous change or
+			the last accepted change). 
+			If [count] is larger than the number of older far
+			change positions go to the oldest far change.
+			If there is no older far change, go to the [count]
+			older near change; i.e. fall back to the original
+			behavior. 
+			If there is no older change an error message is given.
+			(not a motion command)
+g,			Go to [count] newer far change. 
+			Just like |g;| but in the opposite direction.
 
 ==============================================================================
 INSTALLATION					  *EnhancedJumps-installation*
@@ -94,6 +119,13 @@ mappings, or change the special additional mappings, map your keys to the
     nmap g}         <Plug>EnhancedJumpsLocalNewer
     nmap <Leader>{  <Plug>EnhancedJumpsRemoteOlder
     nmap <Leader>}  <Plug>EnhancedJumpsRemoteNewer
+For the change list jump commands, you can choose between two alternatives,
+the default one that falls back to near changes when there are no far changes >
+    nmap z; <Plug>EnhancedJumpsFarFallbackChangeOlder
+    nmap z, <Plug>EnhancedJumpsFarFallbackChangeNewer
+and a pure "far jumps" variant: >
+    nmap z; <Plug>EnhancedJumpsFarChangeOlder
+    nmap z, <Plug>EnhancedJumpsFarChangeNewer
 <
 To disable the special additional mappings: >
     nmap <Plug>DisableEnhancedJumpsLocalOlder  <Plug>EnhancedJumpsLocalOlder
@@ -120,6 +152,10 @@ IDEAS							 *EnhancedJumps-ideas*
 
 ==============================================================================
 HISTORY						       *EnhancedJumps-history*
+
+3.00	09-Feb-2012
+Implement enhanced change list navigation commands g; / g, that skip jumps to
+previous / later edit locations that lie within the currently visible range.
 
 2.00	20-Sep-2011
 - Implement "local jumps" and "remote jumps" special mappings. 
@@ -151,7 +187,7 @@ BF: A '^\)' in the jump text caused "E55: Unmatched \)"
 First published version. 
 
 ==============================================================================
-Copyright: (C) 2009-2011 Ingo Karkat
+Copyright: (C) 2009-2012 Ingo Karkat
 The VIM LICENSE applies to this script; see|copyright|. 
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
