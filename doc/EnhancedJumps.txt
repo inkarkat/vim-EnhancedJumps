@@ -1,4 +1,4 @@
-*EnhancedJumps.txt*     Enhanced jump and change list navigation commands. 
+*EnhancedJumps.txt*     Enhanced jump and change list navigation commands.
 
 		       ENHANCED JUMPS    by Ingo Karkat
 							   *EnhancedJumps.vim*
@@ -14,32 +14,32 @@ history				|EnhancedJumps-history|
 ==============================================================================
 DESCRIPTION					   *EnhancedJumps-description*
 
-This plugin enhances the built-in |CTRL-I|/|CTRL-O| jump commands: 
-- After a jump, the line, column and text of the next jump target are printed: 
+This plugin enhances the built-in |CTRL-I|/|CTRL-O| jump commands:
+- After a jump, the line, column and text of the next jump target are printed:
     next: 3,9 ENHANCED JUMPS    by Ingo Karkat ~
 - An error message and the valid range for jumps in that direction is printed
-  if a jump outside the jump list is attempted: 
+  if a jump outside the jump list is attempted:
     Only 8 older jump positions. ~
 - In case the next jump would move to another buffer, only a warning is
   printed at the first attempt:
     next: EnhancedJumps.vim ~
   The jump to another buffer is only done if the same jump command is repeated
   once more immediately afterwards; like this: Pressing CTRL-O, noticing the
-  warning, then quickly pressing CTRL-O again to overcome the warning. 
+  warning, then quickly pressing CTRL-O again to overcome the warning.
   With this, you can eagerly jump around the current buffer. Because you will
   be warned when a jump would move to another buffer, you're much less likely
-  to get lost. 
+  to get lost.
 
 In addition to the enhanced jump commands, separate special mappings are
 available that restrict the jump targets to only local locations (in the same
-buffer) and remote locations (only in other buffers). 
+buffer) and remote locations (only in other buffers).
 
 
 This plugin enhances the built-in |g;|/|g,| change list jump commands so that
 they skip jumps to previous / later edit locations that lie within the
 currently visible range. This makes it easier to navigate between distant
 edits in a large buffer, without having to manually skip over all the local
-changes. 
+changes.
 
 ==============================================================================
 USAGE							 *EnhancedJumps-usage*
@@ -47,44 +47,44 @@ USAGE							 *EnhancedJumps-usage*
 Simply use the |CTRL-O| and |CTRL-I| commands to go to an older / newer cursor
 position in the jump list. When a warning "next: {file}" is echoed, quickly
 repeat the jump command to move to that buffer (a [count] need to not be
-typed again; if you do include the [count], it must be the same as before). 
+typed again; if you do include the [count], it must be the same as before).
 If you do not want to move to that buffer, just ignore the warning, and
 continue browsing the current buffer. On the next jump attempt, the warning
-will be repeated. 
+will be repeated.
 
 							 *g_CTRL-O* *g_CTRL-I*
 g<CTRL-O>, g<CTRL-I>	Go to [count] older / newer cursor position in the
 			current buffer. Jumps to other buffers are not
 			considered. Useful when you mainly edited one file,
 			briefly jumped to another, and now want to recall
-			older positions without considering the other file. 
+			older positions without considering the other file.
 
 					     *<Leader>CTRL-O* *<Leader>CTRL-I*
 <Leader><CTRL-O>, <Leader><CTRL-I>
 			Go to [count] older / newer cursor position in another
 			buffer. Jumps inside the current buffer are not
 			considered. Useful for recalling previously visited
-			buffers without going through all local positions. 
+			buffers without going through all local positions.
 			Regardless of the jump direction, the last jump
 			position in a buffer is used when there are multiple
-			subsequent jumps in a buffer. 
+			subsequent jumps in a buffer.
 
 
 Simply use the |g;| and |g,| commands to go to an older / newer far change
-position in the change list. 
+position in the change list.
 
 g;			Go to [count] older far change (that lies outside the
 			currently visible range and is more than the current
 			window height lines away from the previous change or
-			the last accepted change). 
+			the last accepted change).
 			If [count] is larger than the number of older far
 			change positions go to the oldest far change.
 			If there is no older far change, go to the [count]
 			older near change; i.e. fall back to the original
-			behavior. 
+			behavior.
 			If there is no older change an error message is given.
 			(not a motion command)
-g,			Go to [count] newer far change. 
+g,			Go to [count] newer far change.
 			Just like |g;| but in the opposite direction.
 
 ==============================================================================
@@ -96,11 +96,11 @@ the archive first, e.g. using WinZip. Inside Vim, install by sourcing the
 vimball or via the|:UseVimball|command. >
     vim EnhancedJumps.vba.gz
     :so %
-To uninstall, use the|:RmVimball|command. 
+To uninstall, use the|:RmVimball|command.
 
 DEPENDENCIES					  *EnhancedJumps-dependencies*
 
-- Requires Vim 7.0 or higher. 
+- Requires Vim 7.0 or higher.
 
 ==============================================================================
 CONFIGURATION					 *EnhancedJumps-configuration*
@@ -138,13 +138,23 @@ LIMITATIONS					   *EnhancedJumps-limitations*
 
 - If the jump target is an empty line in another unnamed buffer, and the
   current buffer contains an empty line at the target line, the jump outside
-  the current buffer is not detected, and no warning given. 
+  the current buffer is not detected, and no warning given.
 - If the jump target is in another buffer, and the current buffer contains
   that buffer's filespec at the target line, the jump outside the current
   buffer is not detected, and no warning given. Same for empty buffers, viz.
-  "[No Name]". 
+  "[No Name]".
 
 KNOWN PROBLEMS					*EnhancedJumps-known-problems*
+
+- Jumps to another buffer happen with "redir => l:fileJumpCapture". If other
+  plugins triggered by the e.g. BufWinEnter event do another :redir (like the
+  Recover plugin does to capture :swapname), this causes an error, because
+  nested redirs are prohibited.
+  I could add a configuration switch to choose between either the current
+  capture, no capture (with potential loss of messages), or no "next jump"
+  information for remote jumps. Ideally, this restriction of Vim would be
+  lifted, though, and more functions offered. (Reported 06-Jul-2012 by Alexey
+  Radkov)
 
 TODO							  *EnhancedJumps-todo*
 
@@ -158,12 +168,12 @@ Implement enhanced change list navigation commands g; / g, that skip jumps to
 previous / later edit locations that lie within the currently visible range.
 
 2.00	20-Sep-2011
-- Implement "local jumps" and "remote jumps" special mappings. 
+- Implement "local jumps" and "remote jumps" special mappings.
 - Restructure internal jump list representation to get rid of index
   arithmetic, duplicated checks for current index in, and enhance filter
-  performance. 
+  performance.
 - Split off functions to separate autoload script to help speed up Vim
-  startup. 
+  startup.
 
 1.13	16-Jul-2010
 BUG: Jump opened fold at current position when "No newer/older jump position"
@@ -171,7 +181,7 @@ error occurred.
 
 1.12    17-Jul-2009
 BF: Trailing space after the command to open the folds accidentally moved
-cursor one position to the right of the jump target. 
+cursor one position to the right of the jump target.
 
 1.11	14-Jul-2009
 BF: A '^\)' in the jump text caused "E55: Unmatched \)"
@@ -180,15 +190,15 @@ BF: A '^\)' in the jump text caused "E55: Unmatched \)"
 - ENH: To overcome the next buffer warning, a previously given [count] need
   not be specified again. A jump command with a different [count] than last
   time now is treated as a separate jump command and thus doesn't overcome the
-  next buffer warning. 
-- BF: Folds at the jump target must be explicitly opened. 
+  next buffer warning.
+- BF: Folds at the jump target must be explicitly opened.
 
 1.00	01-Jul-2009
-First published version. 
+First published version.
 
 ==============================================================================
 Copyright: (C) 2009-2012 Ingo Karkat
-The VIM LICENSE applies to this script; see|copyright|. 
+The VIM LICENSE applies to this script; see|copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
 ==============================================================================
