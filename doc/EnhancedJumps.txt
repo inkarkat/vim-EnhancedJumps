@@ -90,13 +90,13 @@ g,			Go to [count] newer far change.
 ==============================================================================
 INSTALLATION					  *EnhancedJumps-installation*
 
-This script is packaged as a|vimball|. If you have the "gunzip" decompressor
+This script is packaged as a |vimball|. If you have the "gunzip" decompressor
 in your PATH, simply edit the *.vba.gz package in Vim; otherwise, decompress
 the archive first, e.g. using WinZip. Inside Vim, install by sourcing the
-vimball or via the|:UseVimball|command. >
+vimball or via the |:UseVimball| command. >
     vim EnhancedJumps.vba.gz
     :so %
-To uninstall, use the|:RmVimball|command.
+To uninstall, use the |:RmVimball| command.
 
 DEPENDENCIES					  *EnhancedJumps-dependencies*
 
@@ -198,7 +198,7 @@ First published version.
 
 ==============================================================================
 Copyright: (C) 2009-2012 Ingo Karkat
-The VIM LICENSE applies to this script; see|copyright|.
+The VIM LICENSE applies to this script; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
 ==============================================================================
