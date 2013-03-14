@@ -41,6 +41,11 @@ currently visible range. This makes it easier to navigate between distant
 edits in a large buffer, without having to manually skip over all the local
 changes.
 
+RELATED WORKS								     *
+
+- back_to_recent_buffer.vim (vimscript #4290) implements going back to the
+  previous buffer.
+
 ==============================================================================
 USAGE							 *EnhancedJumps-usage*
 
@@ -91,10 +96,10 @@ g,			Go to [count] newer far change.
 INSTALLATION					  *EnhancedJumps-installation*
 
 This script is packaged as a |vimball|. If you have the "gunzip" decompressor
-in your PATH, simply edit the *.vba.gz package in Vim; otherwise, decompress
+in your PATH, simply edit the *.vmb.gz package in Vim; otherwise, decompress
 the archive first, e.g. using WinZip. Inside Vim, install by sourcing the
 vimball or via the |:UseVimball| command. >
-    vim EnhancedJumps.vba.gz
+    vim EnhancedJumps*.vmb.gz
     :so %
 To uninstall, use the |:RmVimball| command.
 
