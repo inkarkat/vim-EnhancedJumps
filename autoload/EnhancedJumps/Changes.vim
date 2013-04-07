@@ -10,7 +10,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
-"   2.10.002	09-Feb-2012	Modify s:FilterNearJumps() algorithm. 
+"   3.00.002	09-Feb-2012	Modify s:FilterNearJumps() algorithm. 
 "	001	08-Feb-2012	file creation
 let s:save_cpo = &cpo
 set cpo&vim
@@ -47,6 +47,18 @@ function! s:FilterNearJumps( jumps, startLnum, endLnum, nearHeight )
     endfor
 "****D echo "****\n" join(l:farJumps, "\n")
     return l:farJumps
+endfunction
+function! EnhancedJumps#Changes#GetJumps( isNewer )
+    let [l:startLnum, l:endLnum] = ingowindow#DisplayedLines()
+    let l:nearHeight = winheight(0)
+
+    return s:FilterNearJumps(
+    \	EnhancedJumps#Common#SliceJumpsInDirection(
+    \	    EnhancedJumps#Common#GetJumps('changes'),
+    \	    a:isNewer
+    \	),
+    \	l:startLnum, l:endLnum, l:nearHeight
+    \)
 endfunction
 
 function! s:warn( warningmsg )
@@ -86,17 +98,7 @@ endfunction
 function! EnhancedJumps#Changes#Jump( isNewer, isFallbackToNearChanges )
     let l:jumpDirection = (a:isNewer ? 'newer' : 'older')
     let l:count = v:count1
-    let [l:startLnum, l:endLnum] = ingowindow#DisplayedLines()
-    let l:nearHeight = winheight(0)
-
-    let l:jumps = s:FilterNearJumps(
-    \	EnhancedJumps#Common#SliceJumpsInDirection(
-    \	    EnhancedJumps#Common#GetJumps('changes'),
-    \	    a:isNewer
-    \	),
-    \	l:startLnum, l:endLnum, l:nearHeight
-    \)
-
+    let l:jumps = EnhancedJumps#Changes#GetJumps(a:isNewer)
     if empty(l:jumps)
 	if a:isFallbackToNearChanges
 	    " Perform the [count]'th near jump. 
