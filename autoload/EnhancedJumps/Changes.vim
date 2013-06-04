@@ -1,16 +1,17 @@
-" Changes.vim: Enhanced change list navigation commands. 
+" Changes.vim: Enhanced change list navigation commands.
 "
 " DEPENDENCIES:
-"   - EnhancedJumps/Common.vim autoload script. 
-"   - ingowindow.vim autoload script. 
+"   - EnhancedJumps/Common.vim autoload script
+"   - ingo/window/dimensions.vim autoload script
 "
-" Copyright: (C) 2012 Ingo Karkat
-"   The VIM LICENSE applies to this script; see ':help copyright'. 
+" Copyright: (C) 2012-2013 Ingo Karkat
+"   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
-" REVISION	DATE		REMARKS 
-"   3.00.002	09-Feb-2012	Modify s:FilterNearJumps() algorithm. 
+" REVISION	DATE		REMARKS
+"   3.01.003	08-Apr-2013	Move ingowindow.vim functions into ingo-library.
+"   3.00.002	09-Feb-2012	Modify s:FilterNearJumps() algorithm.
 "	001	08-Feb-2012	file creation
 let s:save_cpo = &cpo
 set cpo&vim
@@ -30,7 +31,7 @@ function! s:FilterNearJumps( jumps, startLnum, endLnum, nearHeight )
 	let l:currentParsedJump = EnhancedJumps#Common#ParseJumpLine(a:jumps[l:i])
 	" Include the current jump if it's outside the currently visible range,
 	" and more than a:nearHeight lines away from the previous jump or from
-	" the last accepted jump. 
+	" the last accepted jump.
 "****D echomsg '****' l:currentParsedJump.lnum l:prevParsedJump.lnum l:lastLnum
 	if (
 	\   l:currentParsedJump.lnum < a:startLnum ||
@@ -49,7 +50,7 @@ function! s:FilterNearJumps( jumps, startLnum, endLnum, nearHeight )
     return l:farJumps
 endfunction
 function! EnhancedJumps#Changes#GetJumps( isNewer )
-    let [l:startLnum, l:endLnum] = ingowindow#DisplayedLines()
+    let [l:startLnum, l:endLnum] = ingo#window#dimensions#DisplayedLines()
     let l:nearHeight = winheight(0)
 
     return s:FilterNearJumps(
@@ -62,7 +63,7 @@ function! EnhancedJumps#Changes#GetJumps( isNewer )
 endfunction
 
 function! s:warn( warningmsg )
-    redraw	" After the jump, a redraw is pending. Do it now or the message may vanish. 
+    redraw	" After the jump, a redraw is pending. Do it now or the message may vanish.
     let v:warningmsg = a:warningmsg
     echohl WarningMsg
     echomsg v:warningmsg
@@ -78,15 +79,15 @@ function! s:DoJump( count, isNewer )
 	execute 'normal!' a:count . (a:isNewer ? 'g,' : 'g;')
 
 	" When typed, g,/g; open the fold at the jump target, but inside a
-	" mapping or :normal this must be done explicitly via 'zv'. 
+	" mapping or :normal this must be done explicitly via 'zv'.
 	normal! zv
-	
+
 	return 1
     catch /^Vim\%((\a\+)\)\=:E/
-	" A Vim error occurs when already at the start / end of the changelist. 
+	" A Vim error occurs when already at the start / end of the changelist.
 
 	" v:exception contains what is normally in v:errmsg, but with extra
-	" exception source info prepended, which we cut away. 
+	" exception source info prepended, which we cut away.
 	let v:errmsg = substitute(v:exception, '^Vim\%((\a\+)\)\=:', '', '')
 	echohl ErrorMsg
 	echomsg v:errmsg
@@ -101,10 +102,10 @@ function! EnhancedJumps#Changes#Jump( isNewer, isFallbackToNearChanges )
     let l:jumps = EnhancedJumps#Changes#GetJumps(a:isNewer)
     if empty(l:jumps)
 	if a:isFallbackToNearChanges
-	    " Perform the [count]'th near jump. 
+	    " Perform the [count]'th near jump.
 	    if s:DoJump(l:count, a:isNewer)
 		" Only print the warning when the jump was successful; it may
-		" have already errored out with "At start / end of changelist". 
+		" have already errored out with "At start / end of changelist".
 		call s:warn(printf('No %s far change', l:jumpDirection))
 	    endif
 	else
@@ -113,7 +114,7 @@ function! EnhancedJumps#Changes#Jump( isNewer, isFallbackToNearChanges )
 	    echomsg v:errmsg
 	    echohl None
 
-	    " Still execute the a zero-jump command to cause the customary beep. 
+	    " Still execute the a zero-jump command to cause the customary beep.
 	    call s:DoJump(0, a:isNewer)
 	endif
 
@@ -125,18 +126,18 @@ function! EnhancedJumps#Changes#Jump( isNewer, isFallbackToNearChanges )
     let l:targetJump = get(l:jumps, l:count - 1, '')
     if empty(l:targetJump)
 	" Jump to the last available far jump, like the original 999g, jumps to
-	" the last change. 
+	" the last change.
 	let l:targetJump = get(l:jumps, -1, '')
 	let l:isFallbackNearJump = 1
     endif
 
     " Because of filtering the count for the jump command does not correspond to
-    " the given count and must be retrieved from the jump line. 
+    " the given count and must be retrieved from the jump line.
     let l:jumpCount = EnhancedJumps#Common#ParseJumpLine(l:targetJump).count
 "****D echomsg '****' l:count l:jumpCount
     if s:DoJump(l:jumpCount, a:isNewer) && l:isFallbackNearJump
 	" Only print the warning when the jump was successful; it may
-	" have already errored out with "At start / end of changelist". 
+	" have already errored out with "At start / end of changelist".
 	call s:warn(printf('No more %d %s far changes', l:count, l:jumpDirection))
     endif
 endfunction
