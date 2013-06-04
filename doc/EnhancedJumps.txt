@@ -106,6 +106,8 @@ To uninstall, use the |:RmVimball| command.
 DEPENDENCIES					  *EnhancedJumps-dependencies*
 
 - Requires Vim 7.0 or higher.
+- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.004 or
+  higher.
 
 ==============================================================================
 CONFIGURATION					 *EnhancedJumps-configuration*
@@ -171,6 +173,9 @@ IDEAS							 *EnhancedJumps-ideas*
 ==============================================================================
 HISTORY						       *EnhancedJumps-history*
 
+3.01	RELEASEME
+- Add dependency to ingo-library (vimscript #4433).
+
 3.00	09-Feb-2012
 Implement enhanced change list navigation commands g; / g, that skip jumps to
 previous / later edit locations that lie within the currently visible range.
@@ -205,7 +210,7 @@ BF: A '^\)' in the jump text caused "E55: Unmatched \)"
 First published version.
 
 ==============================================================================
-Copyright: (C) 2009-2012 Ingo Karkat
+Copyright: (C) 2009-2013 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
