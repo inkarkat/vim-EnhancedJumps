@@ -1,14 +1,18 @@
 " EnhancedJumps.vim: Enhanced jump list navigation commands. 
 "
 " DEPENDENCIES:
+"   - EnhancedJumps/Common.vim autoload script. 
 "   - EchoWithoutScrolling.vim autoload script.  
 "
-" Copyright: (C) 2009-2011 Ingo Karkat
+" Copyright: (C) 2009-2012 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   3.00.014	08-Feb-2012	Move common shared functions to
+"				EnhancedJumps/Common.vim autoload script to
+"				allow re-use by new EnhancedJumps/Changes.vim. 
 "   2.00.013	20-Sep-2011	Split off autoload script. 
 "   2.00.012	14-Sep-2011	Make s:ParseJumpLine() return object to allow
 "				easier access to attributes without array
@@ -93,63 +97,19 @@
 "				like in the :jumps output. 
 "	001	27-Jun-2009	file creation
 
-function! s:GetJumps()
-    redir => l:jumpsOutput
-    silent! jumps
-    redir END
-    redraw  " This is necessary because of the :redir done earlier. 
-
-    return split(l:jumpsOutput, "\n")[1:] " The first line contains the header. 
-endfunction
-function! s:GetCurrentIndex( jumps )
-    let l:currentIndex = -1
-    " Note: The linear search starts from the end because it's more likely that
-    " the user hasn't navigated to the oldest entries in the jump list. 
-    for l:i in reverse(range(len(a:jumps)))
-	if a:jumps[l:i][0] ==# '>'
-	    let l:currentIndex = l:i
-	    break
-	endif
-    endfor
-    if l:currentIndex < 0 | throw 'ASSERT: :jumps command contains > marker' | endif
-    return l:currentIndex
-endfunction
-function! s:SliceJumpsInDirection( jumps, isNewer )
-"******************************************************************************
-"* PURPOSE:
-"   From the list of jumps, keep only those following the current index in the
-"   direction of jump, and reverse older jumps so that the jump index directly
-"   corresponds to the count of the jump. 
-"* ASSUMPTIONS / PRECONDITIONS:
-"   None. 
-"* EFFECTS / POSTCONDITIONS:
-"   None. 
-"* INPUTS:
-"   a:jumps List of jump lines from :jumps command. 
-"   a:isNewer	Flag whether the jump is to newer jumps. 
-"* RETURN VALUES: 
-"   Rearranged slice of jumps; the jump index corresponds to the jump count. 
-"******************************************************************************
-    let l:currentIndex = s:GetCurrentIndex(a:jumps)
-    if a:isNewer
-	return a:jumps[(l:currentIndex + 1) : ]
-    else
-	return (l:currentIndex == 0 ? [] : reverse(a:jumps[ : (l:currentIndex - 1)]))
-    endif
-endfunction
-function! s:RemoveDuplicateSubsequentFiles( isNewer, jumps )
+function! s:FilterDuplicateSubsequentFiles( jumps, isNewer )
 "****D echo join(a:jumps, "\n")
     " Always jump to the latest file position, also when jumping to newer files.
     " This way, the same position is maintained when jumping older and newer.
     " Otherwise, the newer jumps would always start at the top of the file (or
     " remembered file position) - not very useful. 
     let l:uniqueJumps = []
-    let l:prevParsedJump = s:ParseJumpLine('')
+    let l:prevParsedJump = EnhancedJumps#Common#ParseJumpLine('')
     for l:i in (a:isNewer ?
     \	range(len(a:jumps) - 1, 0, -1) :
     \	range(len(a:jumps))
     \)
-	let l:currentParsedJump = s:ParseJumpLine(a:jumps[l:i])
+	let l:currentParsedJump = EnhancedJumps#Common#ParseJumpLine(a:jumps[l:i])
 	" Include the current jump if it's a different file or there are other
 	" local jumps in between (i.e. the jump counts are not sequential). 
 	if l:currentParsedJump.text !=# l:prevParsedJump.text ||
@@ -169,10 +129,11 @@ function! s:FilterJumps( jumps, filter, isNewer )
     if empty(a:filter)
 	return a:jumps
     elseif a:filter ==# 'local'
-	return filter(a:jumps, 's:IsJumpInCurrentBuffer(s:ParseJumpLine(v:val))')
+	return filter(a:jumps, 's:IsJumpInCurrentBuffer(EnhancedJumps#Common#ParseJumpLine(v:val))')
     elseif a:filter ==# 'remote'
-	return s:RemoveDuplicateSubsequentFiles(a:isNewer, 
-	\   filter(a:jumps, '! s:IsJumpInCurrentBuffer(s:ParseJumpLine(v:val))')
+	return s:FilterDuplicateSubsequentFiles(
+	\   filter(a:jumps, '! s:IsJumpInCurrentBuffer(EnhancedJumps#Common#ParseJumpLine(v:val))'),
+	\   a:isNewer
 	\)
     else
 	throw 'ASSERT: Unknown filter type ' . string(a:filter)
@@ -220,16 +181,6 @@ function! s:IsJumpInCurrentBuffer( parsedJump )
     endif
 "****D echomsg '****' l:regexp
     return getline(a:parsedJump.lnum) =~# l:regexp
-endfunction
-function! s:ParseJumpLine( jumpLine )
-    " Parse one line of output from :jumps into object with count, lnum, col, text. 
-    let l:parseResult = matchlist(a:jumpLine, '^>\?\s*\(\d\+\)\s\+\(\d\+\)\s\+\(\d\+\)\s\+\(.*\)$')
-    return {
-    \	'count': get(l:parseResult, 1, 0),
-    \	'lnum' : get(l:parseResult, 2, 0),
-    \	'col'  : get(l:parseResult, 3, 0),
-    \	'text' : get(l:parseResult, 4, '')
-    \}
 endfunction
 function! s:RecordPosition()
     " The position record consists of the current cursor position and the buffer
@@ -284,7 +235,7 @@ function! s:Echo( fileJumpMessages, message )
     endif
 endfunction
 function! s:EchoFollowingMessage( followingJump, jumpDirection, filterName, fileJumpMessages )
-    let l:following = s:ParseJumpLine(a:followingJump)
+    let l:following = EnhancedJumps#Common#ParseJumpLine(a:followingJump)
     if empty(a:followingJump)
 	redraw
 	call s:Echo(a:fileJumpMessages, printf('No %s%s jump position', a:jumpDirection, a:filterName))
@@ -305,7 +256,7 @@ function! EnhancedJumps#Jump( isNewer, filter )
     let l:filterName = (empty(a:filter) ? '' : ' ' . a:filter)
     let l:jumpDirection = (a:isNewer ? 'newer' : 'older')
 
-    let l:jumps = s:FilterJumps(s:SliceJumpsInDirection(s:GetJumps(), a:isNewer), a:filter, a:isNewer)
+    let l:jumps = s:FilterJumps(EnhancedJumps#Common#SliceJumpsInDirection(EnhancedJumps#Common#GetJumps('jumps'), a:isNewer), a:filter, a:isNewer)
     let l:count = s:GetCount()
 
     let l:targetJump = get(l:jumps, l:count - 1, '')
@@ -314,7 +265,7 @@ function! EnhancedJumps#Jump( isNewer, filter )
 "****D echomsg '****' l:followingJump
     " In case of filtering the count for the jump command does not correspond to
     " the given count and must be retrieved from the jump line. 
-    let l:jumpCount = (empty(a:filter) ? l:count : s:ParseJumpLine(l:targetJump).count)
+    let l:jumpCount = (empty(a:filter) ? l:count : EnhancedJumps#Common#ParseJumpLine(l:targetJump).count)
 "****D echomsg '****' l:count l:jumpCount
     if empty(l:targetJump)
 	let l:countMax = len(l:jumps)
@@ -332,7 +283,7 @@ function! EnhancedJumps#Jump( isNewer, filter )
 	" beep. 
 	call s:DoJump(l:jumpCount, a:isNewer)
     else
-	let l:target = s:ParseJumpLine(l:targetJump)
+	let l:target = EnhancedJumps#Common#ParseJumpLine(l:targetJump)
 	if s:IsInvalid(l:target.text)
 	    " Do nothing here, the jump command will print an error. 
 	    call s:DoJump(l:jumpCount, a:isNewer)
@@ -365,7 +316,7 @@ function! EnhancedJumps#Jump( isNewer, filter )
 		    "  In addition, the file paths to the file may have changed
 		    "  due to changes in CWD / 'autochdir'. 
 		    let l:followingJump = get(
-		    \	s:FilterJumps(s:SliceJumpsInDirection(s:GetJumps(), a:isNewer), a:filter, a:isNewer),
+		    \	s:FilterJumps(EnhancedJumps#Common#SliceJumpsInDirection(EnhancedJumps#Common#GetJumps('jumps'), a:isNewer), a:filter, a:isNewer),
 		    \	0, ''
 		    \)
 		endif
