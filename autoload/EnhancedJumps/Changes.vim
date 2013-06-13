@@ -10,6 +10,14 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   3.01.004	05-Jun-2013	Handle it when the :changes command sometimes
+"				outputs just the header without a following ">"
+"				marker by catching the plugin exception in
+"				EnhancedJumps#Changes#GetJumps() and returning
+"				an empty List instead. This will cause the
+"				callers to fall back on the default g; / g,
+"				commands, which will then report the "E664:
+"				changelist is empty" error.
 "   3.01.003	08-Apr-2013	Move ingowindow.vim functions into ingo-library.
 "   3.00.002	09-Feb-2012	Modify s:FilterNearJumps() algorithm.
 "	001	08-Feb-2012	file creation
@@ -53,13 +61,17 @@ function! EnhancedJumps#Changes#GetJumps( isNewer )
     let [l:startLnum, l:endLnum] = ingo#window#dimensions#DisplayedLines()
     let l:nearHeight = winheight(0)
 
-    return s:FilterNearJumps(
-    \	EnhancedJumps#Common#SliceJumpsInDirection(
-    \	    EnhancedJumps#Common#GetJumps('changes'),
-    \	    a:isNewer
-    \	),
-    \	l:startLnum, l:endLnum, l:nearHeight
-    \)
+    try
+	return s:FilterNearJumps(
+	\   EnhancedJumps#Common#SliceJumpsInDirection(
+	\       EnhancedJumps#Common#GetJumps('changes'),
+	\       a:isNewer
+	\   ),
+	\   l:startLnum, l:endLnum, l:nearHeight
+	\)
+    catch /^EnhancedJumps:/
+	return []
+    endtry
 endfunction
 
 function! s:warn( warningmsg )
