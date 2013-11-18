@@ -106,7 +106,7 @@ To uninstall, use the |:RmVimball| command.
 DEPENDENCIES					  *EnhancedJumps-dependencies*
 
 - Requires Vim 7.0 or higher.
-- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.004 or
+- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.008 or
   higher.
 
 ==============================================================================
