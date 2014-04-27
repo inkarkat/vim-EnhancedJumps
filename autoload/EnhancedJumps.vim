@@ -3,6 +3,7 @@
 " DEPENDENCIES:
 "   - EnhancedJumps/Common.vim autoload script
 "   - ingo/avoidprompt.vim autoload script
+"   - ingo/msg.vim autoload script
 "
 " Copyright: (C) 2009-2013 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
@@ -10,6 +11,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   3.01.016	14-Jun-2013	Use ingo/msg.vim.
 "   3.01.015	07-Jun-2013	Move EchoWithoutScrolling.vim into ingo-library.
 "   3.00.014	08-Feb-2012	Move common shared functions to
 "				EnhancedJumps/Common.vim autoload script to
@@ -212,13 +214,7 @@ function! s:DoJump( count, isNewer )
 	return 1
     catch /^Vim\%((\a\+)\)\=:E/
 	" A Vim error occurs when there's an invalid jump position.
-
-	" v:exception contains what is normally in v:errmsg, but with extra
-	" exception source info prepended, which we cut away.
-	let v:errmsg = substitute(v:exception, '^Vim\%((\a\+)\)\=:', '', '')
-	echohl ErrorMsg
-	echomsg v:errmsg
-	echohl None
+	call ingo#msg#VimExceptionMsg()
 	return 0
     endtry
 endfunction
@@ -271,13 +267,10 @@ function! EnhancedJumps#Jump( isNewer, filter )
     if empty(l:targetJump)
 	let l:countMax = len(l:jumps)
 	if l:countMax == 0
-	    let v:errmsg = printf('No %s%s jump position', l:jumpDirection, l:filterName)
+	    call ingo#msg#ErrorMsg(printf('No %s%s jump position', l:jumpDirection, l:filterName))
 	else
-	    let v:errmsg = printf('Only %d %s%s jump position%s', l:countMax, l:jumpDirection, l:filterName, (l:countMax > 1 ? 's' : ''))
+	    call ingo#msg#ErrorMsg(printf('Only %d %s%s jump position%s', l:countMax, l:jumpDirection, l:filterName, (l:countMax > 1 ? 's' : '')))
 	endif
-	echohl ErrorMsg
-	echomsg v:errmsg
-	echohl None
 
 	" We still execute the actual jump command, even though we've determined
 	" that it won't work. The jump command will still cause the customary
