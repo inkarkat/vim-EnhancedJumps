@@ -2,6 +2,7 @@
 "
 " DEPENDENCIES:
 "   - EnhancedJumps/Common.vim autoload script
+"   - ingo/msg.vim autoload script
 "   - ingo/window/dimensions.vim autoload script
 "
 " Copyright: (C) 2012-2013 Ingo Karkat
@@ -10,6 +11,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   3.01.005	14-Jun-2013	Use ingo/msg.vim.
 "   3.01.004	05-Jun-2013	Handle it when the :changes command sometimes
 "				outputs just the header without a following ">"
 "				marker by catching the plugin exception in
@@ -97,13 +99,7 @@ function! s:DoJump( count, isNewer )
 	return 1
     catch /^Vim\%((\a\+)\)\=:E/
 	" A Vim error occurs when already at the start / end of the changelist.
-
-	" v:exception contains what is normally in v:errmsg, but with extra
-	" exception source info prepended, which we cut away.
-	let v:errmsg = substitute(v:exception, '^Vim\%((\a\+)\)\=:', '', '')
-	echohl ErrorMsg
-	echomsg v:errmsg
-	echohl None
+	call ingo#msg#VimExceptionMsg()
 	return 0
     endtry
 endfunction
@@ -121,11 +117,7 @@ function! EnhancedJumps#Changes#Jump( isNewer, isFallbackToNearChanges )
 		call s:warn(printf('No %s far change', l:jumpDirection))
 	    endif
 	else
-	    let v:errmsg = printf('No %s far change', l:jumpDirection)
-	    echohl ErrorMsg
-	    echomsg v:errmsg
-	    echohl None
-
+	    call ingo#msg#ErrorMsg(printf('No %s far change', l:jumpDirection))
 	    " Still execute the a zero-jump command to cause the customary beep.
 	    call s:DoJump(0, a:isNewer)
 	endif
