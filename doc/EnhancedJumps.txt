@@ -173,13 +173,14 @@ IDEAS							 *EnhancedJumps-ideas*
 ==============================================================================
 HISTORY						       *EnhancedJumps-history*
 
-3.01	RELEASEME
-- Add dependency to ingo-library (vimscript #4433).
+3.01	19-Nov-2013
 - Handle it when the :changes command sometimes outputs just the header
   without a following ">" marker by catching the plugin exception in
   EnhancedJumps#Changes#GetJumps() and returning an empty List instead. This
   will cause the callers to fall back on the default g; / g, commands, which
   will then report the "E664: changelist is empty" error.
+- Add dependency to ingo-library (vimscript #4433). *** You need to separately
+  install ingo-library (vimscript #4433) version 1.008 (or higher)! ***
 
 3.00	09-Feb-2012
 Implement enhanced change list navigation commands g; / g, that skip jumps to
