@@ -5,7 +5,7 @@
 "   - ingo/avoidprompt.vim autoload script
 "   - ingo/msg.vim autoload script
 "
-" Copyright: (C) 2009-2013 Ingo Karkat
+" Copyright: (C) 2009-2014 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -212,7 +212,7 @@ function! s:DoJump( count, isNewer )
 	normal! zv
 
 	return 1
-    catch /^Vim\%((\a\+)\)\=:E/
+    catch /^Vim\%((\a\+)\)\=:/
 	" A Vim error occurs when there's an invalid jump position.
 	call ingo#msg#VimExceptionMsg()
 	return 0
