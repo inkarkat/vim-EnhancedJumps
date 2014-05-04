@@ -5,7 +5,7 @@
 "   - ingo/msg.vim autoload script
 "   - ingo/window/dimensions.vim autoload script
 "
-" Copyright: (C) 2012-2013 Ingo Karkat
+" Copyright: (C) 2012-2014 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -97,7 +97,7 @@ function! s:DoJump( count, isNewer )
 	normal! zv
 
 	return 1
-    catch /^Vim\%((\a\+)\)\=:E/
+    catch /^Vim\%((\a\+)\)\=:/
 	" A Vim error occurs when already at the start / end of the changelist.
 	call ingo#msg#VimExceptionMsg()
 	return 0
