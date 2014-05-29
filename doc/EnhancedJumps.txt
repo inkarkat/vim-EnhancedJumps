@@ -173,6 +173,9 @@ IDEAS							 *EnhancedJumps-ideas*
 ==============================================================================
 HISTORY						       *EnhancedJumps-history*
 
+3.02	RELEASEME
+- Use ingo#msg#WarningMsg().
+
 3.01	19-Nov-2013
 - Handle it when the :changes command sometimes outputs just the header
   without a following ">" marker by catching the plugin exception in
@@ -216,7 +219,7 @@ BF: A '^\)' in the jump text caused "E55: Unmatched \)"
 First published version.
 
 ==============================================================================
-Copyright: (C) 2009-2013 Ingo Karkat
+Copyright: (C) 2009-2014 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
