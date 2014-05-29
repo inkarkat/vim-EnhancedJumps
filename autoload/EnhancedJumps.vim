@@ -11,6 +11,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   3.02.017	05-May-2014	Use ingo#msg#WarningMsg().
 "   3.01.016	14-Jun-2013	Use ingo/msg.vim.
 "   3.01.015	07-Jun-2013	Move EchoWithoutScrolling.vim into ingo-library.
 "   3.00.014	08-Feb-2012	Move common shared functions to
@@ -332,11 +333,7 @@ function! EnhancedJumps#Jump( isNewer, filter )
 		" jump command to overcome the warning.
 		let t:lastJumpCommandCount = l:count
 
-		let v:warningmsg = printf('next%s: %s', l:filterName, s:BufferName(l:target.text))
-		echohl WarningMsg
-		echomsg v:warningmsg
-		echohl None
-
+		call ingo#msg#WarningMsg(printf('next%s: %s', l:filterName, s:BufferName(l:target.text)))
 		" Signal edge case via beep.
 		execute "normal! \<C-\>\<C-n>\<Esc>"
 
