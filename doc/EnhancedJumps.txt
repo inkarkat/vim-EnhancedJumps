@@ -106,7 +106,7 @@ To uninstall, use the |:RmVimball| command.
 DEPENDENCIES					  *EnhancedJumps-dependencies*
 
 - Requires Vim 7.0 or higher.
-- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.008 or
+- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.020 or
   higher.
 
 ==============================================================================
@@ -175,6 +175,8 @@ HISTORY						       *EnhancedJumps-history*
 
 3.02	RELEASEME
 - Use ingo#msg#WarningMsg().
+- Use ingo#record#Position().
+*** You need to update to ingo-library (vimscript #4433) version 1.020! ***
 
 3.01	19-Nov-2013
 - Handle it when the :changes command sometimes outputs just the header
