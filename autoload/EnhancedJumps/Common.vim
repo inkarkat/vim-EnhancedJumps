@@ -1,34 +1,41 @@
-" Common.vim: Shared functionality for dealing with jump lists. 
+" Common.vim: Shared functionality for dealing with jump lists.
 "
 " DEPENDENCIES:
 "
 " Copyright: (C) 2012 Ingo Karkat
-"   The VIM LICENSE applies to this script; see ':help copyright'. 
+"   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
-" REVISION	DATE		REMARKS 
-"   3.00.001	08-Feb-2012	file creation from autoload/EnhancedJumps.vim. 
+" REVISION	DATE		REMARKS
+"   3.01.002	05-Jun-2013	Change assertion into plugin exception, since
+"				the :changes command sometimes outputs just the
+"				header without a following ">" marker.
+"   3.00.001	08-Feb-2012	file creation from autoload/EnhancedJumps.vim.
 
 function! EnhancedJumps#Common#GetJumps( command )
     redir => l:jumpsOutput
     silent! execute a:command
     redir END
-    redraw  " This is necessary because of the :redir done earlier. 
+    redraw  " This is necessary because of the :redir done earlier.
 
-    return split(l:jumpsOutput, "\n")[1:] " The first line contains the header. 
+    return split(l:jumpsOutput, "\n")[1:] " The first line contains the header.
 endfunction
 function! s:GetCurrentIndex( jumps )
     let l:currentIndex = -1
     " Note: The linear search starts from the end because it's more likely that
-    " the user hasn't navigated to the oldest entries in the jump list. 
+    " the user hasn't navigated to the oldest entries in the jump list.
     for l:i in reverse(range(len(a:jumps)))
 	if a:jumps[l:i][0] ==# '>'
 	    let l:currentIndex = l:i
 	    break
 	endif
     endfor
-    if l:currentIndex < 0 | throw 'ASSERT: :jumps command contains > marker' | endif
+    if l:currentIndex < 0
+	" XXX: Sometimes, the :changes command just outputs the "change line col
+	" text" line, without a ">" line following.
+	throw 'EnhancedJumps: jump list does not contain > marker'
+    endif
     return l:currentIndex
 endfunction
 function! EnhancedJumps#Common#SliceJumpsInDirection( jumps, isNewer )
@@ -36,16 +43,16 @@ function! EnhancedJumps#Common#SliceJumpsInDirection( jumps, isNewer )
 "* PURPOSE:
 "   From the list of jumps, keep only those following the current index in the
 "   direction of jump, and reverse older jumps so that the jump index directly
-"   corresponds to the count of the jump. 
+"   corresponds to the count of the jump.
 "* ASSUMPTIONS / PRECONDITIONS:
-"   None. 
+"   None.
 "* EFFECTS / POSTCONDITIONS:
-"   None. 
+"   None.
 "* INPUTS:
-"   a:jumps List of jump lines from :jumps command. 
-"   a:isNewer	Flag whether the jump is to newer jumps. 
-"* RETURN VALUES: 
-"   Rearranged slice of jumps; the jump index corresponds to the jump count. 
+"   a:jumps List of jump lines from :jumps or :changes command.
+"   a:isNewer	Flag whether the jump is to newer jumps.
+"* RETURN VALUES:
+"   Rearranged slice of jumps; the jump index corresponds to the jump count.
 "******************************************************************************
     let l:currentIndex = s:GetCurrentIndex(a:jumps)
     if a:isNewer
@@ -56,7 +63,7 @@ function! EnhancedJumps#Common#SliceJumpsInDirection( jumps, isNewer )
 endfunction
 
 function! EnhancedJumps#Common#ParseJumpLine( jumpLine )
-    " Parse one line of output from :jumps into object with count, lnum, col, text. 
+    " Parse one line of output from :jumps into object with count, lnum, col, text.
     let l:parseResult = matchlist(a:jumpLine, '^>\?\s*\(\d\+\)\s\+\(\d\+\)\s\+\(\d\+\)\s\+\(.*\)$')
     return {
     \	'count': get(l:parseResult, 1, 0),
