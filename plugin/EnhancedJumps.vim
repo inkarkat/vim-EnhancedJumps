@@ -4,12 +4,13 @@
 "   - Requires Vim 7.0 or higher. 
 "   - EnhancedJumps.vim autoload script.  
 "
-" Copyright: (C) 2009-2011 Ingo Karkat
+" Copyright: (C) 2009-2012 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   3.00.002	08-Feb-2012	Add mappings for jumps to far changes. 
 "   2.00.001	27-Jun-2009	Split off autoload script. 
 "				file creation
 
@@ -33,6 +34,11 @@ nnoremap <silent> <Plug>EnhancedJumpsLocalNewer  :<C-u>call EnhancedJumps#Jump(1
 nnoremap <silent> <Plug>EnhancedJumpsRemoteOlder :<C-u>call EnhancedJumps#Jump(0,'remote')<CR>
 nnoremap <silent> <Plug>EnhancedJumpsRemoteNewer :<C-u>call EnhancedJumps#Jump(1,'remote')<CR>
 
+nnoremap <silent> <Plug>EnhancedJumpsFarChangeOlder         :<C-u>call EnhancedJumps#Changes#Jump(0,0)<CR>
+nnoremap <silent> <Plug>EnhancedJumpsFarChangeNewer         :<C-u>call EnhancedJumps#Changes#Jump(1,0)<CR>
+nnoremap <silent> <Plug>EnhancedJumpsFarFallbackChangeOlder :<C-u>call EnhancedJumps#Changes#Jump(0,1)<CR>
+nnoremap <silent> <Plug>EnhancedJumpsFarFallbackChangeNewer :<C-u>call EnhancedJumps#Changes#Jump(1,1)<CR>
+
 if ! hasmapto('<Plug>EnhancedJumpsOlder', 'n')
     nmap <C-o> <Plug>EnhancedJumpsOlder
 endif
@@ -50,6 +56,13 @@ if ! hasmapto('<Plug>EnhancedJumpsRemoteOlder', 'n')
 endif
 if ! hasmapto('<Plug>EnhancedJumpsRemoteNewer', 'n')
     nmap <Leader><C-i> <Plug>EnhancedJumpsRemoteNewer
+endif
+
+if ! hasmapto('<Plug>EnhancedJumpsFarFallbackChangeOlder', 'n')
+    nmap g; <Plug>EnhancedJumpsFarFallbackChangeOlder
+endif
+if ! hasmapto('<Plug>EnhancedJumpsFarFallbackChangeNewer', 'n')
+    nmap g, <Plug>EnhancedJumpsFarFallbackChangeNewer
 endif
 
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
