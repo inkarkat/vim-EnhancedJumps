@@ -4,6 +4,7 @@
 "   - EnhancedJumps/Common.vim autoload script
 "   - ingo/avoidprompt.vim autoload script
 "   - ingo/msg.vim autoload script
+"   - ingo/record.vim autoload script
 "
 " Copyright: (C) 2009-2014 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
@@ -11,6 +12,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   3.02.018	30-May-2014	Use ingo#record#Position().
 "   3.02.017	05-May-2014	Use ingo#msg#WarningMsg().
 "   3.01.016	14-Jun-2013	Use ingo/msg.vim.
 "   3.01.015	07-Jun-2013	Move EchoWithoutScrolling.vim into ingo-library.
@@ -186,11 +188,6 @@ function! s:IsJumpInCurrentBuffer( parsedJump )
 "****D echomsg '****' l:regexp
     return getline(a:parsedJump.lnum) =~# l:regexp
 endfunction
-function! s:RecordPosition()
-    " The position record consists of the current cursor position and the buffer
-    " number.
-    return getpos('.') + [bufnr('')]
-endfunction
 function! s:DoJump( count, isNewer )
     if a:count == 0
 	execute "normal! \<C-\>\<C-n>\<Esc>"
@@ -202,9 +199,9 @@ function! s:DoJump( count, isNewer )
 	" not a Vim error, so no exception is thrown.
 	" We check the position before and after the jump to detect its success
 	" in all cases.
-	let l:originalPosition = s:RecordPosition()
+	let l:originalPosition = ingo#record#Position(0)
 	execute 'normal!' a:count . (a:isNewer ? "\<C-i>" : "\<C-o>")
-	if s:RecordPosition() == l:originalPosition
+	if ingo#record#Position(0) == l:originalPosition
 	    return 0
 	endif
 
