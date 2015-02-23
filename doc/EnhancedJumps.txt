@@ -112,13 +112,22 @@ DEPENDENCIES					  *EnhancedJumps-dependencies*
 ==============================================================================
 CONFIGURATION					 *EnhancedJumps-configuration*
 
+For a permanent configuration, put the following commands into your |vimrc|:
+
 					      *g:stopFirstAndNotifyTimeoutLen*
 The time span in which the jump command must be repeated to overcome the
 warning about jumping into another buffer defaults to (roughly) two seconds.
 To change the timeout, set a different value (in milliseconds): >
     let g:stopFirstAndNotifyTimeoutLen = 2000
 <
-
+					 *g:EnhancedJumps_CaptureJumpMessages*
+Jumps to another buffer happen with "redir => l:fileJumpCapture". If other
+plugins triggered by the (e.g. BufWinEnter) event do another :redir, this
+causes an error, because nested redirs are prohibited. You can avoid this
+problem by turning off the capture of jump messages: >
+    let g:EnhancedJumps_CaptureJumpMessages = 0
+<
+							 *EnhancedJumps-remap*
 If you do not want to override the built-in jump commands and use separate
 mappings, or change the special additional mappings, map your keys to the
 <Plug>... mapping targets _before_ sourcing the script (e.g. in your |vimrc|). >
@@ -156,16 +165,6 @@ LIMITATIONS					   *EnhancedJumps-limitations*
 
 KNOWN PROBLEMS					*EnhancedJumps-known-problems*
 
-- Jumps to another buffer happen with "redir => l:fileJumpCapture". If other
-  plugins triggered by the e.g. BufWinEnter event do another :redir (like the
-  Recover plugin does to capture :swapname), this causes an error, because
-  nested redirs are prohibited.
-  I could add a configuration switch to choose between either the current
-  capture, no capture (with potential loss of messages), or no "next jump"
-  information for remote jumps. Ideally, this restriction of Vim would be
-  lifted, though, and more functions offered. (Reported 06-Jul-2012 by Alexey
-  Radkov)
-
 TODO							  *EnhancedJumps-todo*
 
 IDEAS							 *EnhancedJumps-ideas*
@@ -173,10 +172,16 @@ IDEAS							 *EnhancedJumps-ideas*
 ==============================================================================
 HISTORY						       *EnhancedJumps-history*
 
-3.02	RELEASEME
+3.02	29-Sep-2014
+- Add g:EnhancedJumps_CaptureJumpMessages configuration to turn off the
+  capturing of the messages during the jump, as the used :redir may cause
+  errors with another, concurrent capture. This was first reported by
+  by Alexey Radkov on 06-Jul-2012 (conflict with the Recover.vim plugin that
+  was fixed in that plugin), now again by Maxim Gonchar (conflict with
+  Vimfiler plugin).
 - Use ingo#msg#WarningMsg().
 - Use ingo#record#Position().
-*** You need to update to ingo-library (vimscript #4433) version 1.020! ***
+  *** You need to update to ingo-library (vimscript #4433) version 1.020! ***
 
 3.01	19-Nov-2013
 - Handle it when the :changes command sometimes outputs just the header
