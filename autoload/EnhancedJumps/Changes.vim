@@ -11,6 +11,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   3.02.006	05-May-2014	Use ingo#msg#WarningMsg().
 "   3.01.005	14-Jun-2013	Use ingo/msg.vim.
 "   3.01.004	05-Jun-2013	Handle it when the :changes command sometimes
 "				outputs just the header without a following ">"
@@ -78,10 +79,7 @@ endfunction
 
 function! s:warn( warningmsg )
     redraw	" After the jump, a redraw is pending. Do it now or the message may vanish.
-    let v:warningmsg = a:warningmsg
-    echohl WarningMsg
-    echomsg v:warningmsg
-    echohl None
+    call ingo#msg#WarningMsg(a:warningmsg)
 endfunction
 function! s:DoJump( count, isNewer )
     if a:count == 0
