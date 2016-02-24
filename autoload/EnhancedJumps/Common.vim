@@ -2,7 +2,7 @@
 "
 " DEPENDENCIES:
 "
-" Copyright: (C) 2012 Ingo Karkat
+" Copyright: (C) 2012-2014 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -12,6 +12,8 @@
 "				the :changes command sometimes outputs just the
 "				header without a following ">" marker.
 "   3.00.001	08-Feb-2012	file creation from autoload/EnhancedJumps.vim.
+let s:save_cpo = &cpo
+set cpo&vim
 
 function! EnhancedJumps#Common#GetJumps( command )
     redir => l:jumpsOutput
@@ -73,4 +75,6 @@ function! EnhancedJumps#Common#ParseJumpLine( jumpLine )
     \}
 endfunction
 
+let &cpo = s:save_cpo
+unlet s:save_cpo
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
