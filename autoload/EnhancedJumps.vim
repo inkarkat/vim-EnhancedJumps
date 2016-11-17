@@ -12,6 +12,10 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   3.02.019	29-Sep-2014	Add g:EnhancedJumps_CaptureJumpMessages
+"				configuration to turn off the capturing of the
+"				messages during the jump, as the used :redir may
+"				cause errors with another, concurrent capture.
 "   3.02.018	30-May-2014	Use ingo#record#Position().
 "   3.02.017	05-May-2014	Use ingo#msg#WarningMsg().
 "   3.01.016	14-Jun-2013	Use ingo/msg.vim.
@@ -102,6 +106,8 @@
 "				jumps inside the current buffer are highlighted
 "				like in the :jumps output.
 "	001	27-Jun-2009	file creation
+let s:save_cpo = &cpo
+set cpo&vim
 
 function! s:FilterDuplicateSubsequentFiles( jumps, isNewer )
 "****D echo join(a:jumps, "\n")
@@ -292,11 +298,18 @@ function! EnhancedJumps#Jump( isNewer, filter )
 	    " repeating the original [count] or completely omitting it) is
 	    " executed once more immediately afterwards.
 	    let l:isSameCountAsLast = (! v:count || (exists('t:lastJumpCommandCount') && t:lastJumpCommandCount == v:count1))
-	    let l:wasLastJumpBufferStop = l:isSameCountAsLast && (exists('t:lastJumpBufferStop') && s:WasLastStop([a:isNewer, winnr(), l:target.text, localtime()], t:lastJumpBufferStop))
+	    let l:wasLastJumpBufferStop = l:isSameCountAsLast &&
+	    \   exists('t:lastJumpBufferStop') &&
+	    \   s:WasLastStop([a:isNewer, winnr(), l:target.text, localtime()], t:lastJumpBufferStop)
 	    if l:wasLastJumpBufferStop || ! empty(a:filter)
-		redir => l:fileJumpCapture
-		silent call s:DoJump(l:jumpCount, a:isNewer)
-		redir END
+		if g:EnhancedJumps_CaptureJumpMessages
+		    redir => l:fileJumpCapture
+			silent call s:DoJump(l:jumpCount, a:isNewer)
+		    redir END
+		else
+		    let l:fileJumpCapture = ''
+		    call s:DoJump(l:jumpCount, a:isNewer)
+		endif
 
 		if a:filter ==# 'remote'
 		    " After the jump to another file, the filtered list for
@@ -344,4 +357,6 @@ function! EnhancedJumps#Jump( isNewer, filter )
     let t:lastJumpCommandCount = 0  " This is no repetition.
 endfunction
 
+let &cpo = s:save_cpo
+unlet s:save_cpo
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
