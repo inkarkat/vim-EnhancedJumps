@@ -224,15 +224,20 @@ function! s:DoJump( count, isNewer )
 endfunction
 function! s:Echo( fileJumpMessages, message )
     if empty(a:fileJumpMessages)
-	echo a:message
+	echo ingo#avoidprompt#Truncate(a:message)
     elseif &cmdheight > 1 || len(a:fileJumpMessages) > 1
 	for l:message in a:fileJumpMessages
 	    echomsg l:message
 	endfor
-	echo a:message
+	echo ingo#avoidprompt#Truncate(a:message)
     else
-	echomsg a:fileJumpMessages[0] . ' '
-	echon a:message
+	let message = ingo#avoidprompt#Truncate(a:message, strlen(a:fileJumpMessages[0])+1)
+	if len(message)
+	    echomsg a:fileJumpMessages[0] . ' '
+	    echon message
+	else
+	    echomsg a:fileJumpMessages[0]
+	endif
     endif
 endfunction
 function! s:EchoFollowingMessage( followingJump, jumpDirection, filterName, fileJumpMessages )
@@ -246,11 +251,15 @@ function! s:EchoFollowingMessage( followingJump, jumpDirection, filterName, file
     elseif s:IsJumpInCurrentBuffer(l:following)
 	let l:header = printf('next%s: %d,%d ', a:filterName, l:following.lnum, l:following.col)
 	call s:Echo(a:fileJumpMessages, l:header)
+	let reservedColumns = strlen(l:header)	" l:header is printable ASCII-only, so can use strlen() for text width.
+	if len(a:fileJumpMessages) == 1 && &cmdheight == 1
+	    let reservedColumns += len(a:fileJumpMessages[0])+1
+	endif
 	echohl Directory
-	echon ingo#avoidprompt#Truncate(l:following.text, strlen(l:header))	| " l:header is printable ASCII-only, so can use strlen() for text width.
+	echon ingo#avoidprompt#Truncate(getline(l:following.lnum), reservedColumns)
 	echohl None
     else
-	call s:Echo(a:fileJumpMessages, ingo#avoidprompt#Truncate(printf('next%s: %s', a:filterName, s:BufferName(l:following.text))))
+	call s:Echo(a:fileJumpMessages, printf('next%s: %s', a:filterName, s:BufferName(l:following.text)))
     endif
 endfunction
 function! EnhancedJumps#Jump( isNewer, filter )
@@ -311,20 +320,20 @@ function! EnhancedJumps#Jump( isNewer, filter )
 		    call s:DoJump(l:jumpCount, a:isNewer)
 		endif
 
-		if a:filter ==# 'remote'
-		    " After the jump to another file, the filtered list for
-		    " remote files becomes wrong in case the following file is
-		    " the same as the original file (i.e. A(original) -> B(jump)
-		    " -> A(following)), because that jump was initially filtered
-		    "  out. To correctly determine the following jump, we must
-		    "  re-query and re-filter the jumps.
-		    "  In addition, the file paths to the file may have changed
-		    "  due to changes in CWD / 'autochdir'.
-		    let l:followingJump = get(
-		    \	s:FilterJumps(EnhancedJumps#Common#SliceJumpsInDirection(EnhancedJumps#Common#GetJumps('jumps'), a:isNewer), a:filter, a:isNewer),
-		    \	0, ''
-		    \)
-		endif
+		" After the jump to another file, the filtered list for
+		" remote files becomes wrong in case the following file is
+		" the same as the original file (i.e. A(original) -> B(jump)
+		" -> A(following)), because that jump was initially filtered
+		"  out. To correctly determine the following jump, we must
+		"  re-query and re-filter the jumps.
+		"  In addition, the file paths to the file may have changed
+		"  due to changes in CWD / 'autochdir'.
+		"  For local files the jumplist gets updated with the text for
+		"  the jumps, while it only contained the buffer name before.
+		let l:followingJump = get(
+		\	s:FilterJumps(EnhancedJumps#Common#SliceJumpsInDirection(EnhancedJumps#Common#GetJumps('jumps'), a:isNewer), a:filter, a:isNewer),
+		\	0, ''
+		\)
 
 		call s:EchoFollowingMessage(l:followingJump, l:jumpDirection, l:filterName,
 		\   filter(
