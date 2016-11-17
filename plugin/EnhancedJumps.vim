@@ -2,14 +2,16 @@
 "
 " DEPENDENCIES:
 "   - Requires Vim 7.0 or higher.
-"   - EnhancedJumps.vim autoload script.
+"   - EnhancedJumps.vim autoload script
+"   - ingo/err.vim autoload script
 "
-" Copyright: (C) 2009-2014 Ingo Karkat
+" Copyright: (C) 2009-2016 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   3.10.004	18-Nov-2016	Abort command sequence in case of jump errors.
 "   3.02.003	29-Sep-2014	Add g:EnhancedJumps_CaptureJumpMessages
 "				configuration to turn off the capturing of the
 "				messages during the jump, as the used :redir may
@@ -36,17 +38,17 @@ endif
 
 "- mappings -------------------------------------------------------------------
 
-nnoremap <silent> <Plug>EnhancedJumpsOlder       :<C-u>call EnhancedJumps#Jump(0,'')<CR>
-nnoremap <silent> <Plug>EnhancedJumpsNewer       :<C-u>call EnhancedJumps#Jump(1,'')<CR>
-nnoremap <silent> <Plug>EnhancedJumpsLocalOlder  :<C-u>call EnhancedJumps#Jump(0,'local')<CR>
-nnoremap <silent> <Plug>EnhancedJumpsLocalNewer  :<C-u>call EnhancedJumps#Jump(1,'local')<CR>
-nnoremap <silent> <Plug>EnhancedJumpsRemoteOlder :<C-u>call EnhancedJumps#Jump(0,'remote')<CR>
-nnoremap <silent> <Plug>EnhancedJumpsRemoteNewer :<C-u>call EnhancedJumps#Jump(1,'remote')<CR>
+nnoremap <silent> <Plug>EnhancedJumpsOlder       :<C-u>if ! EnhancedJumps#Jump(0,'')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsNewer       :<C-u>if ! EnhancedJumps#Jump(1,'')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsLocalOlder  :<C-u>if ! EnhancedJumps#Jump(0,'local')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsLocalNewer  :<C-u>if ! EnhancedJumps#Jump(1,'local')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsRemoteOlder :<C-u>if ! EnhancedJumps#Jump(0,'remote')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsRemoteNewer :<C-u>if ! EnhancedJumps#Jump(1,'remote')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
 
-nnoremap <silent> <Plug>EnhancedJumpsFarChangeOlder         :<C-u>call EnhancedJumps#Changes#Jump(0,0)<CR>
-nnoremap <silent> <Plug>EnhancedJumpsFarChangeNewer         :<C-u>call EnhancedJumps#Changes#Jump(1,0)<CR>
-nnoremap <silent> <Plug>EnhancedJumpsFarFallbackChangeOlder :<C-u>call EnhancedJumps#Changes#Jump(0,1)<CR>
-nnoremap <silent> <Plug>EnhancedJumpsFarFallbackChangeNewer :<C-u>call EnhancedJumps#Changes#Jump(1,1)<CR>
+nnoremap <silent> <Plug>EnhancedJumpsFarChangeOlder         :<C-u>if ! EnhancedJumps#Changes#Jump(0,0)<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsFarChangeNewer         :<C-u>if ! EnhancedJumps#Changes#Jump(1,0)<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsFarFallbackChangeOlder :<C-u>if ! EnhancedJumps#Changes#Jump(0,1)<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsFarFallbackChangeNewer :<C-u>if ! EnhancedJumps#Changes#Jump(1,1)<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
 
 if ! hasmapto('<Plug>EnhancedJumpsOlder', 'n')
     nmap <C-o> <Plug>EnhancedJumpsOlder
