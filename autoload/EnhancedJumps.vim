@@ -4,6 +4,7 @@
 "   - EnhancedJumps/Common.vim autoload script
 "   - ingo/avoidprompt.vim autoload script
 "   - ingo/compat.vim autoload script
+"   - ingo/err.vim autoload script
 "   - ingo/msg.vim autoload script
 "   - ingo/record.vim autoload script
 "
@@ -13,6 +14,12 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   3.10.021	18-Nov-2016	Use real error reporting with ingo#err#Set()
+"				(beeps are still simply issues, without aborting
+"				command sequences). We cannot use the return
+"				status of s:DoJump(), because that signifies
+"				whether a jump has occurred. We check via
+"				ingo#err#IsSet() instead.
 "   3.03.020	18-Nov-2016	After a jump to another file, also re-query the
 "				jumps, because the jumplist got updated with the
 "				text for the jumps, whereas it previously only
@@ -235,7 +242,7 @@ function! s:DoJump( count, isNewer )
 	return 1
     catch /^Vim\%((\a\+)\)\=:/
 	" A Vim error occurs when there's an invalid jump position.
-	call ingo#msg#VimExceptionMsg()
+	call ingo#err#VimExceptionMsg('EnhancedJumps')
 	return 0
     endtry
 endfunction
@@ -276,6 +283,7 @@ function! s:EchoFollowingMessage( followingJump, jumpDirection, filterName, file
     endif
 endfunction
 function! EnhancedJumps#Jump( isNewer, filter )
+    call ingo#err#Clear('EnhancedJumps')
     let l:filterName = (empty(a:filter) ? '' : ' ' . a:filter)
     let l:jumpDirection = (a:isNewer ? 'newer' : 'older')
 
@@ -293,9 +301,9 @@ function! EnhancedJumps#Jump( isNewer, filter )
     if empty(l:targetJump)
 	let l:countMax = len(l:jumps)
 	if l:countMax == 0
-	    call ingo#msg#ErrorMsg(printf('No %s%s jump position', l:jumpDirection, l:filterName))
+	    call ingo#err#Set(printf('No %s%s jump position', l:jumpDirection, l:filterName), 'EnhancedJumps')
 	else
-	    call ingo#msg#ErrorMsg(printf('Only %d %s%s jump position%s', l:countMax, l:jumpDirection, l:filterName, (l:countMax > 1 ? 's' : '')))
+	    call ingo#err#Set(printf('Only %d %s%s jump position%s', l:countMax, l:jumpDirection, l:filterName, (l:countMax > 1 ? 's' : '')), 'EnhancedJumps')
 	endif
 
 	" We still execute the actual jump command, even though we've determined
@@ -370,13 +378,15 @@ function! EnhancedJumps#Jump( isNewer, filter )
 		execute "normal! \<C-\>\<C-n>\<Esc>"
 
 		" We stop here, and do not execute the actual jump command.
-		return
+		return 1
 	    endif
 	endif
     endif
 
     let t:lastJumpBufferStop = [a:isNewer, winnr(), '', 0]
     let t:lastJumpCommandCount = 0  " This is no repetition.
+
+    return ! ingo#err#IsSet('EnhancedJumps')
 endfunction
 
 let &cpo = s:save_cpo
