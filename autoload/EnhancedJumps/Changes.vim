@@ -5,12 +5,13 @@
 "   - ingo/msg.vim autoload script
 "   - ingo/window/dimensions.vim autoload script
 "
-" Copyright: (C) 2012-2014 Ingo Karkat
+" Copyright: (C) 2012-2015 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   3.03.007	24-Feb-2015	Minor: Use ingo#compat#abs().
 "   3.02.006	05-May-2014	Use ingo#msg#WarningMsg().
 "   3.01.005	14-Jun-2013	Use ingo/msg.vim.
 "   3.01.004	05-Jun-2013	Handle it when the :changes command sometimes
@@ -27,10 +28,6 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! s:abs( num1, num2 )
-    let l:difference = a:num1 - a:num2
-    return (l:difference >= 0 ? l:difference : -1 * l:difference)
-endfunction
 function! s:FilterNearJumps( jumps, startLnum, endLnum, nearHeight )
 "****D echomsg '####' a:startLnum a:endLnum
     let l:farJumps = []
@@ -48,8 +45,8 @@ function! s:FilterNearJumps( jumps, startLnum, endLnum, nearHeight )
 	\   l:currentParsedJump.lnum < a:startLnum ||
 	\   l:currentParsedJump.lnum > a:endLnum
 	\) && (
-	\   s:abs(l:currentParsedJump.lnum, l:prevParsedJump.lnum) > a:nearHeight ||
-	\   s:abs(l:currentParsedJump.lnum, l:lastLnum) > a:nearHeight
+	\   ingo#compat#abs(l:currentParsedJump.lnum - l:prevParsedJump.lnum) > a:nearHeight ||
+	\   ingo#compat#abs(l:currentParsedJump.lnum - l:lastLnum) > a:nearHeight
 	\)
 	    call add(l:farJumps, a:jumps[l:i])
 	    let l:lastLnum = l:currentParsedJump.lnum
