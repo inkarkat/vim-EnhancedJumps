@@ -3,15 +3,32 @@
 " DEPENDENCIES:
 "   - EnhancedJumps/Common.vim autoload script
 "   - ingo/avoidprompt.vim autoload script
+"   - ingo/compat.vim autoload script
 "   - ingo/msg.vim autoload script
 "   - ingo/record.vim autoload script
 "
-" Copyright: (C) 2009-2014 Ingo Karkat
+" Copyright: (C) 2009-2016 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   3.03.020	18-Nov-2016	After a jump to another file, also re-query the
+"				jumps, because the jumplist got updated with the
+"				text for the jumps, whereas it previously only
+"				contained the buffer name. Thanks to Daniel
+"				Hahler for sending a patch.
+"				Especially in small terminals, jump messages may
+"				not fit and cause a hit-enter prompt. Truncate
+"				messages in s:Echo().
+"				Local jump message only considers the
+"				header, but not the file jump messages. If its
+"				one, and cmdheight is 1, add its width to the
+"				number of reserved columns, as we append the
+"				following location. Thanks to Daniel Hahler for
+"				the patch.
+"				The warning message before a remote jump isn't
+"				truncated to fit.
 "   3.02.019	29-Sep-2014	Add g:EnhancedJumps_CaptureJumpMessages
 "				configuration to turn off the capturing of the
 "				messages during the jump, as the used :redir may
@@ -231,13 +248,9 @@ function! s:Echo( fileJumpMessages, message )
 	endfor
 	echo ingo#avoidprompt#Truncate(a:message)
     else
-	let message = ingo#avoidprompt#Truncate(a:message, strlen(a:fileJumpMessages[0])+1)
-	if len(message)
-	    echomsg a:fileJumpMessages[0] . ' '
-	    echon message
-	else
-	    echomsg a:fileJumpMessages[0]
-	endif
+	let l:message = ingo#avoidprompt#Truncate(a:message, ingo#compat#strdisplaywidth(a:fileJumpMessages[0]) + 1)    " The captured jump message may contain unprintable or non-ASCII characters; use strdisplaywidth().
+	echomsg a:fileJumpMessages[0] . (empty(l:message) ? '' : ' ')
+	echon l:message
     endif
 endfunction
 function! s:EchoFollowingMessage( followingJump, jumpDirection, filterName, fileJumpMessages )
@@ -251,12 +264,12 @@ function! s:EchoFollowingMessage( followingJump, jumpDirection, filterName, file
     elseif s:IsJumpInCurrentBuffer(l:following)
 	let l:header = printf('next%s: %d,%d ', a:filterName, l:following.lnum, l:following.col)
 	call s:Echo(a:fileJumpMessages, l:header)
-	let reservedColumns = strlen(l:header)	" l:header is printable ASCII-only, so can use strlen() for text width.
+	let l:reservedColumns = len(l:header)	" l:header is printable ASCII-only, so can use len() for text width.
 	if len(a:fileJumpMessages) == 1 && &cmdheight == 1
-	    let reservedColumns += len(a:fileJumpMessages[0])+1
+	    let l:reservedColumns += ingo#compat#strdisplaywidth(a:fileJumpMessages[0], l:reservedColumns) + 1  " The captured jump message may contain unprintable or non-ASCII characters; use strdisplaywidth(); it starts after the header, so consider its width, too.
 	endif
 	echohl Directory
-	echon ingo#avoidprompt#Truncate(getline(l:following.lnum), reservedColumns)
+	echon ingo#avoidprompt#Truncate(getline(l:following.lnum), l:reservedColumns)
 	echohl None
     else
 	call s:Echo(a:fileJumpMessages, printf('next%s: %s', a:filterName, s:BufferName(l:following.text)))
@@ -352,7 +365,7 @@ function! EnhancedJumps#Jump( isNewer, filter )
 		" jump command to overcome the warning.
 		let t:lastJumpCommandCount = l:count
 
-		call ingo#msg#WarningMsg(printf('next%s: %s', l:filterName, s:BufferName(l:target.text)))
+		call ingo#msg#WarningMsg(ingo#avoidprompt#Truncate(printf('next%s: %s', l:filterName, s:BufferName(l:target.text))))
 		" Signal edge case via beep.
 		execute "normal! \<C-\>\<C-n>\<Esc>"
 
