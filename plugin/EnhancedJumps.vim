@@ -1,32 +1,41 @@
-" EnhancedJumps.vim: Enhanced jump list navigation commands. 
+" EnhancedJumps.vim: Enhanced jump list navigation commands.
 "
 " DEPENDENCIES:
-"   - Requires Vim 7.0 or higher. 
-"   - EnhancedJumps.vim autoload script.  
+"   - Requires Vim 7.0 or higher.
+"   - EnhancedJumps.vim autoload script.
 "
-" Copyright: (C) 2009-2012 Ingo Karkat
-"   The VIM LICENSE applies to this script; see ':help copyright'. 
+" Copyright: (C) 2009-2014 Ingo Karkat
+"   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
-" REVISION	DATE		REMARKS 
-"   3.00.002	08-Feb-2012	Add mappings for jumps to far changes. 
-"   2.00.001	27-Jun-2009	Split off autoload script. 
+" REVISION	DATE		REMARKS
+"   3.02.003	29-Sep-2014	Add g:EnhancedJumps_CaptureJumpMessages
+"				configuration to turn off the capturing of the
+"				messages during the jump, as the used :redir may
+"				cause errors with another, concurrent capture.
+"   3.00.002	08-Feb-2012	Add mappings for jumps to far changes.
+"   2.00.001	27-Jun-2009	Split off autoload script.
 "				file creation
 
-" Avoid installing twice or when in unsupported Vim version. 
+" Avoid installing twice or when in unsupported Vim version.
 if exists('g:loaded_EnhancedJumps') || (v:version < 700)
     finish
 endif
 let g:loaded_EnhancedJumps = 1
 
 "- configuration --------------------------------------------------------------
+
 if ! exists('g:stopFirstAndNotifyTimeoutLen')
     let g:stopFirstAndNotifyTimeoutLen = 2000
+endif
+if ! exists('g:EnhancedJumps_CaptureJumpMessages')
+    let g:EnhancedJumps_CaptureJumpMessages = 1
 endif
 
 
 "- mappings -------------------------------------------------------------------
+
 nnoremap <silent> <Plug>EnhancedJumpsOlder       :<C-u>call EnhancedJumps#Jump(0,'')<CR>
 nnoremap <silent> <Plug>EnhancedJumpsNewer       :<C-u>call EnhancedJumps#Jump(1,'')<CR>
 nnoremap <silent> <Plug>EnhancedJumpsLocalOlder  :<C-u>call EnhancedJumps#Jump(0,'local')<CR>
