@@ -11,6 +11,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   3.10.005	19-Nov-2016	Make window search strategy when switching
+"				configurable as g:EnhancedJumps_SwitchStrategy.
 "   3.10.004	18-Nov-2016	Abort command sequence in case of jump errors.
 "				ENH: Add <Leader><C-w><C-o> / <Leader><C-w><C-i>
 "				mappings to jump to the target buffer in an
@@ -39,6 +41,9 @@ if ! exists('g:EnhancedJumps_CaptureJumpMessages')
 endif
 if ! exists('g:EnhancedJumps_UseTab')
     let g:EnhancedJumps_UseTab = 1
+endif
+if ! exists('g:EnhancedJumps_SwitchStrategy')
+    let g:EnhancedJumps_SwitchStrategy = 'nearest'
 endif
 
 
