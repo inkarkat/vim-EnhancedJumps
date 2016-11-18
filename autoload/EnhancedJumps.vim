@@ -15,6 +15,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   3.10.023	19-Nov-2016	Make window search strategy when switching
+"				configurable as g:EnhancedJumps_SwitchStrategy.
 "   3.10.022	18-Nov-2016	Rename EnhancedJumps#Jump() to
 "				EnhancedJumps#Go(), pass in a:JumpFuncref, and
 "				rename / expose s:DoJump() as
@@ -263,7 +265,7 @@ function! EnhancedJumps#Switch( targetJump, count, isNewer )
     if ! s:IsJumpInCurrentBuffer(l:target)
 	let l:bufnr = bufnr(ingo#escape#file#bufnameescape(l:target.text, 1, 0))
 	if l:bufnr != -1 && bufnr('') != l:bufnr
-	    let [l:tabPageNr, l:winNr] = ingo#buffer#locate#NearestWindow(g:EnhancedJumps_UseTab, l:bufnr)
+	    let [l:tabPageNr, l:winNr] = ingo#buffer#locate#Window(g:EnhancedJumps_SwitchStrategy, g:EnhancedJumps_UseTab, l:bufnr)
 	    if l:winNr == 0
 		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
 		return 0
