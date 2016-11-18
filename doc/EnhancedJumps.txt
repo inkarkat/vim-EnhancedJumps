@@ -73,6 +73,13 @@ g<CTRL-O>, g<CTRL-I>	Go to [count] older / newer cursor position in the
 			Regardless of the jump direction, the last jump
 			position in a buffer is used when there are multiple
 			subsequent jumps in a buffer.
+			       *<Leader>CTRL_W_CTRL-O* *<Leader>CTRL-W_CTRL-I*
+<Leader><CTRL-W><CTRL-O>, <Leader><CTRL-W><CTRL-I>
+			Go to [count] older / newer cursor position in another
+			buffer. If the buffer is already visible in another
+			window / tab page (|g:EnhancedJumps_UseTab|), switch
+			to there instead of changing the buffer displayed in
+			the current window.
 
 
 Simply use the |g;| and |g,| commands to go to an older / newer far change
@@ -106,7 +113,7 @@ To uninstall, use the |:RmVimball| command.
 DEPENDENCIES					  *EnhancedJumps-dependencies*
 
 - Requires Vim 7.0 or higher.
-- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.020 or
+- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.028 or
   higher.
 
 ==============================================================================
@@ -127,6 +134,12 @@ causes an error, because nested redirs are prohibited. You can avoid this
 problem by turning off the capture of jump messages: >
     let g:EnhancedJumps_CaptureJumpMessages = 0
 <
+						      *g:EnhancedJumps_UseTab*
+If you don't want the |<Leader>CTRL_W_CTRL-O| / |<Leader>CTRL_W_CTRL-I|
+mappings to search other tab pages for windows containing the jump target: >
+    let g:EnhancedJumps_UseTab = 0
+<
+
 							 *EnhancedJumps-remap*
 If you do not want to override the built-in jump commands and use separate
 mappings, or change the special additional mappings, map your keys to the
@@ -137,7 +150,14 @@ mappings, or change the special additional mappings, map your keys to the
     nmap g}         <Plug>EnhancedJumpsLocalNewer
     nmap <Leader>{  <Plug>EnhancedJumpsRemoteOlder
     nmap <Leader>}  <Plug>EnhancedJumpsRemoteNewer
-
+    nmap <C-w>{     <Plug>EnhancedJumpsSwitchRemoteOlder
+    nmap <C-w>}     <Plug>EnhancedJumpsSwitchRemoteNewer
+There are also mappings that do both local and remote jumps, the latter
+potentially to another window / tab page, i.e. a combination of |CTRL-O| and
+|<Leader>CTRL-W_CTRL-O|. These are not mapped by default: >
+    nmap ,{         <Plug>EnhancedJumpsSwitchOlder
+    nmap ,}         <Plug>EnhancedJumpsSwitchNewer
+<
 For the change list jump commands, you can choose between two alternatives,
 the default one that falls back to near changes when there are no far changes >
     nmap z; <Plug>EnhancedJumpsFarFallbackChangeOlder
@@ -172,7 +192,22 @@ IDEAS							 *EnhancedJumps-ideas*
 ==============================================================================
 HISTORY						       *EnhancedJumps-history*
 
-3.03	RELEASEME
+3.10	RELEASEME
+- ENH: Add <Leader><C-w><C-o> / <Leader><C-w><C-i> mappings to jump to the
+  target buffer in an existing window.
+- Abort command sequence in case of jump errors.
+  *** You need to update to ingo-library (vimscript #4433) version 1.028! ***
+
+3.03	18-Nov-2016
+- After a jump to another file, also re-query the jumps, because the jumplist
+  got updated with the text for the jumps, whereas it previously only
+  contained the buffer name. Thanks to Daniel Hahler for sending a patch.
+- Especially in small terminals, jump messages may not fit and cause a
+  hit-enter prompt. Truncate messages in s:Echo(). Local jump message only
+  considers the header, but not the file jump messages. If its one, and
+  cmdheight is 1, add its width to the number of reserved columns, as we
+  append the following location. Thanks to Daniel Hahler for the patch.
+- The warning message before a remote jump isn't truncated to fit.
 - Minor: Use ingo#compat#abs().
 
 3.02	29-Sep-2014
@@ -229,7 +264,7 @@ BF: A '^\)' in the jump text caused "E55: Unmatched \)"
 First published version.
 
 ==============================================================================
-Copyright: (C) 2009-2015 Ingo Karkat
+Copyright: (C) 2009-2016 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
