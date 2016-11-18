@@ -12,6 +12,9 @@
 "
 " REVISION	DATE		REMARKS
 "   3.10.004	18-Nov-2016	Abort command sequence in case of jump errors.
+"				ENH: Add <Leader><C-w><C-o> / <Leader><C-w><C-i>
+"				mappings to jump to the target buffer in an
+"				existing window.
 "   3.02.003	29-Sep-2014	Add g:EnhancedJumps_CaptureJumpMessages
 "				configuration to turn off the capturing of the
 "				messages during the jump, as the used :redir may
@@ -34,16 +37,24 @@ endif
 if ! exists('g:EnhancedJumps_CaptureJumpMessages')
     let g:EnhancedJumps_CaptureJumpMessages = 1
 endif
+if ! exists('g:EnhancedJumps_UseTab')
+    let g:EnhancedJumps_UseTab = 1
+endif
 
 
 "- mappings -------------------------------------------------------------------
 
-nnoremap <silent> <Plug>EnhancedJumpsOlder       :<C-u>if ! EnhancedJumps#Jump(0,'')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
-nnoremap <silent> <Plug>EnhancedJumpsNewer       :<C-u>if ! EnhancedJumps#Jump(1,'')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
-nnoremap <silent> <Plug>EnhancedJumpsLocalOlder  :<C-u>if ! EnhancedJumps#Jump(0,'local')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
-nnoremap <silent> <Plug>EnhancedJumpsLocalNewer  :<C-u>if ! EnhancedJumps#Jump(1,'local')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
-nnoremap <silent> <Plug>EnhancedJumpsRemoteOlder :<C-u>if ! EnhancedJumps#Jump(0,'remote')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
-nnoremap <silent> <Plug>EnhancedJumpsRemoteNewer :<C-u>if ! EnhancedJumps#Jump(1,'remote')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsOlder             :<C-u>if ! EnhancedJumps#Go('EnhancedJumps#Jump',   0,'')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsNewer             :<C-u>if ! EnhancedJumps#Go('EnhancedJumps#Jump',   1,'')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsLocalOlder        :<C-u>if ! EnhancedJumps#Go('EnhancedJumps#Jump',   0,'local')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsLocalNewer        :<C-u>if ! EnhancedJumps#Go('EnhancedJumps#Jump',   1,'local')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsRemoteOlder       :<C-u>if ! EnhancedJumps#Go('EnhancedJumps#Jump',   0,'remote')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsRemoteNewer       :<C-u>if ! EnhancedJumps#Go('EnhancedJumps#Jump',   1,'remote')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+
+nnoremap <silent> <Plug>EnhancedJumpsSwitchOlder       :<C-u>if ! EnhancedJumps#Go('EnhancedJumps#Switch', 0,'')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsSwitchNewer       :<C-u>if ! EnhancedJumps#Go('EnhancedJumps#Switch', 1,'')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsSwitchRemoteOlder :<C-u>if ! EnhancedJumps#Go('EnhancedJumps#Switch', 0,'remote')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsSwitchRemoteNewer :<C-u>if ! EnhancedJumps#Go('EnhancedJumps#Switch', 1,'remote')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
 
 nnoremap <silent> <Plug>EnhancedJumpsFarChangeOlder         :<C-u>if ! EnhancedJumps#Changes#Jump(0,0)<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
 nnoremap <silent> <Plug>EnhancedJumpsFarChangeNewer         :<C-u>if ! EnhancedJumps#Changes#Jump(1,0)<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
@@ -67,6 +78,13 @@ if ! hasmapto('<Plug>EnhancedJumpsRemoteOlder', 'n')
 endif
 if ! hasmapto('<Plug>EnhancedJumpsRemoteNewer', 'n')
     nmap <Leader><C-i> <Plug>EnhancedJumpsRemoteNewer
+endif
+
+if ! hasmapto('<Plug>EnhancedJumpsSwitchRemoteOlder', 'n')
+    nmap <Leader><C-w><C-o> <Plug>EnhancedJumpsSwitchRemoteOlder
+endif
+if ! hasmapto('<Plug>EnhancedJumpsSwitchRemoteNewer', 'n')
+    nmap <Leader><C-w><C-i> <Plug>EnhancedJumpsSwitchRemoteNewer
 endif
 
 if ! hasmapto('<Plug>EnhancedJumpsFarFallbackChangeOlder', 'n')
