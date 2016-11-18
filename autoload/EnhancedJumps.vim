@@ -3,6 +3,7 @@
 " DEPENDENCIES:
 "   - EnhancedJumps/Common.vim autoload script
 "   - ingo/avoidprompt.vim autoload script
+"   - ingo/buffer/locate.vim autoload script
 "   - ingo/compat.vim autoload script
 "   - ingo/err.vim autoload script
 "   - ingo/msg.vim autoload script
@@ -14,6 +15,13 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   3.10.022	18-Nov-2016	Rename EnhancedJumps#Jump() to
+"				EnhancedJumps#Go(), pass in a:JumpFuncref, and
+"				rename / expose s:DoJump() as
+"				EnhancedJumps#Jump().
+"				Add alternative jump function
+"				EnhancedJumps#Switch() to implement a jump to
+"				the target buffer in an existing window.
 "   3.10.021	18-Nov-2016	Use real error reporting with ingo#err#Set()
 "				(beeps are still simply issues, without aborting
 "				command sequences). We cannot use the return
@@ -218,7 +226,7 @@ function! s:IsJumpInCurrentBuffer( parsedJump )
 "****D echomsg '****' l:regexp
     return getline(a:parsedJump.lnum) =~# l:regexp
 endfunction
-function! s:DoJump( count, isNewer )
+function! EnhancedJumps#Jump( targetJump, count, isNewer )
     if a:count == 0
 	execute "normal! \<C-\>\<C-n>\<Esc>"
 	return 0
@@ -242,9 +250,37 @@ function! s:DoJump( count, isNewer )
 	return 1
     catch /^Vim\%((\a\+)\)\=:/
 	" A Vim error occurs when there's an invalid jump position.
-	call ingo#err#VimExceptionMsg('EnhancedJumps')
+	call ingo#err#SetVimException('EnhancedJumps')
 	return 0
     endtry
+endfunction
+function! EnhancedJumps#Switch( targetJump, count, isNewer )
+    if a:count == 0
+	execute "normal! \<C-\>\<C-n>\<Esc>"
+	return 0
+    endif
+    let l:target = EnhancedJumps#Common#ParseJumpLine(a:targetJump)
+    if ! s:IsJumpInCurrentBuffer(l:target)
+	let l:bufnr = bufnr(ingo#escape#file#bufnameescape(l:target.text, 1, 0))
+	if l:bufnr != -1 && bufnr('') != l:bufnr
+	    let [l:tabPageNr, l:winNr] = ingo#buffer#locate#NearestWindow(g:EnhancedJumps_UseTab, l:bufnr)
+	    if l:winNr == 0
+		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+		return 0
+	    endif
+	    if l:tabPageNr != 0
+		execute l:tabPageNr . 'tabnext'
+	    endif
+	    execute l:winNr . 'wincmd w'
+
+	    call cursor(l:target.lnum, l:target.col)
+	    normal! m'
+
+	    return 1
+	endif
+    endif
+
+    return EnhancedJumps#Jump(a:targetJump, a:count, a:isNewer)
 endfunction
 function! s:Echo( fileJumpMessages, message )
     if empty(a:fileJumpMessages)
@@ -282,7 +318,7 @@ function! s:EchoFollowingMessage( followingJump, jumpDirection, filterName, file
 	call s:Echo(a:fileJumpMessages, printf('next%s: %s', a:filterName, s:BufferName(l:following.text)))
     endif
 endfunction
-function! EnhancedJumps#Jump( isNewer, filter )
+function! EnhancedJumps#Go( JumpFuncref, isNewer, filter )
     call ingo#err#Clear('EnhancedJumps')
     let l:filterName = (empty(a:filter) ? '' : ' ' . a:filter)
     let l:jumpDirection = (a:isNewer ? 'newer' : 'older')
@@ -309,17 +345,17 @@ function! EnhancedJumps#Jump( isNewer, filter )
 	" We still execute the actual jump command, even though we've determined
 	" that it won't work. The jump command will still cause the customary
 	" beep.
-	call s:DoJump(l:jumpCount, a:isNewer)
+	call call(a:JumpFuncref, [l:targetJump, l:jumpCount, a:isNewer])
     else
 	let l:target = EnhancedJumps#Common#ParseJumpLine(l:targetJump)
 	if s:IsInvalid(l:target.text)
 	    " Do nothing here, the jump command will print an error.
-	    call s:DoJump(l:jumpCount, a:isNewer)
+	    call call(a:JumpFuncref, [l:jumpCount, a:isNewer])
 	elseif s:IsJumpInCurrentBuffer(l:target)
 	    " To avoid that the jump command's output overwrites the indication
 	    " of the next jump position, the jump command is executed first and
 	    " the indication only printed if the jump didn't cause an error.
-	    if s:DoJump(l:jumpCount, a:isNewer)
+	    if call(a:JumpFuncref, [l:targetJump, l:jumpCount, a:isNewer])
 		call s:EchoFollowingMessage(l:followingJump, l:jumpDirection, l:filterName, '')
 	    endif
 	else
@@ -334,11 +370,11 @@ function! EnhancedJumps#Jump( isNewer, filter )
 	    if l:wasLastJumpBufferStop || ! empty(a:filter)
 		if g:EnhancedJumps_CaptureJumpMessages
 		    redir => l:fileJumpCapture
-			silent call s:DoJump(l:jumpCount, a:isNewer)
+			silent call call(a:JumpFuncref, [l:targetJump, l:jumpCount, a:isNewer])
 		    redir END
 		else
 		    let l:fileJumpCapture = ''
-		    call s:DoJump(l:jumpCount, a:isNewer)
+		    call call(a:JumpFuncref, [l:targetJump, l:jumpCount, a:isNewer])
 		endif
 
 		" After the jump to another file, the filtered list for
