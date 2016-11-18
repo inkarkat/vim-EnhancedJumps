@@ -138,6 +138,10 @@ problem by turning off the capture of jump messages: >
 If you don't want the |<Leader>CTRL_W_CTRL-O| / |<Leader>CTRL_W_CTRL-I|
 mappings to search other tab pages for windows containing the jump target: >
     let g:EnhancedJumps_UseTab = 0
+<					      *g:EnhancedJumps_SwitchStrategy*
+By default, the nearest window that contains the buffer with the jump target
+is used. If you like to use the first buffer (like |:sbuffer| does), configure: >
+    let g:EnhancedJumps_SwitchStrategy = 'first'
 <
 
 							 *EnhancedJumps-remap*
