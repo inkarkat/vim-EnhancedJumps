@@ -2,15 +2,22 @@
 "
 " DEPENDENCIES:
 "   - EnhancedJumps/Common.vim autoload script
+"   - ingo/err.vim autoload script
 "   - ingo/msg.vim autoload script
 "   - ingo/window/dimensions.vim autoload script
 "
-" Copyright: (C) 2012-2015 Ingo Karkat
+" Copyright: (C) 2012-2016 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   3.10.008	18-Nov-2016	Use real error reporting with ingo#err#Set()
+"				(beeps are still simply issues, without aborting
+"				command sequences). We cannot use the return
+"				status of s:DoJump(), because that signifies
+"				whether a jump has occurred. We check via
+"				ingo#err#IsSet() instead.
 "   3.03.007	24-Feb-2015	Minor: Use ingo#compat#abs().
 "   3.02.006	05-May-2014	Use ingo#msg#WarningMsg().
 "   3.01.005	14-Jun-2013	Use ingo/msg.vim.
@@ -94,12 +101,13 @@ function! s:DoJump( count, isNewer )
 	return 1
     catch /^Vim\%((\a\+)\)\=:/
 	" A Vim error occurs when already at the start / end of the changelist.
-	call ingo#msg#VimExceptionMsg()
+	call ingo#err#VimExceptionMsg('EnhancedJumps')
 	return 0
     endtry
 endfunction
 
 function! EnhancedJumps#Changes#Jump( isNewer, isFallbackToNearChanges )
+    call ingo#err#Clear('EnhancedJumps')
     let l:jumpDirection = (a:isNewer ? 'newer' : 'older')
     let l:count = v:count1
     let l:jumps = EnhancedJumps#Changes#GetJumps(a:isNewer)
@@ -112,12 +120,12 @@ function! EnhancedJumps#Changes#Jump( isNewer, isFallbackToNearChanges )
 		call s:warn(printf('No %s far change', l:jumpDirection))
 	    endif
 	else
-	    call ingo#msg#ErrorMsg(printf('No %s far change', l:jumpDirection))
+	    call ingo#err#Set(printf('No %s far change', l:jumpDirection), 'EnhancedJumps')
 	    " Still execute the a zero-jump command to cause the customary beep.
 	    call s:DoJump(0, a:isNewer)
 	endif
 
-	return
+	return ! ingo#err#IsSet('EnhancedJumps')
     endif
 
 "****D for j in l:jumps | echomsg j | endfor
@@ -139,6 +147,7 @@ function! EnhancedJumps#Changes#Jump( isNewer, isFallbackToNearChanges )
 	" have already errored out with "At start / end of changelist".
 	call s:warn(printf('No more %d %s far changes', l:count, l:jumpDirection))
     endif
+    return ! ingo#err#IsSet('EnhancedJumps')
 endfunction
 
 let &cpo = s:save_cpo
