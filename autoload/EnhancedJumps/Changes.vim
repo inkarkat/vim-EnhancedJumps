@@ -12,6 +12,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   3.10.009	28-Nov-2016	BUG: Typo in replaced error function name.
 "   3.10.008	18-Nov-2016	Use real error reporting with ingo#err#Set()
 "				(beeps are still simply issues, without aborting
 "				command sequences). We cannot use the return
@@ -101,7 +102,7 @@ function! s:DoJump( count, isNewer )
 	return 1
     catch /^Vim\%((\a\+)\)\=:/
 	" A Vim error occurs when already at the start / end of the changelist.
-	call ingo#err#VimExceptionMsg('EnhancedJumps')
+	call ingo#err#SetVimException('EnhancedJumps')
 	return 0
     endtry
 endfunction
