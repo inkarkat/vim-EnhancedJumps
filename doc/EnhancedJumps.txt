@@ -102,10 +102,16 @@ g,			Go to [count] newer far change.
 ==============================================================================
 INSTALLATION					  *EnhancedJumps-installation*
 
-This script is packaged as a |vimball|. If you have the "gunzip" decompressor
-in your PATH, simply edit the *.vmb.gz package in Vim; otherwise, decompress
-the archive first, e.g. using WinZip. Inside Vim, install by sourcing the
-vimball or via the |:UseVimball| command. >
+The code is hosted in a Git repo at
+    https://github.com/inkarkat/vim-EnhancedJumps
+You can use your favorite plugin manager, or "git clone" into a directory used
+for Vim |packages|. Releases are on the "stable" branch, the latest unstable
+development snapshot on "master".
+
+This script is also packaged as a |vimball|. If you have the "gunzip"
+decompressor in your PATH, simply edit the *.vmb.gz package in Vim; otherwise,
+decompress the archive first, e.g. using WinZip. Inside Vim, install by
+sourcing the vimball or via the |:UseVimball| command. >
     vim EnhancedJumps*.vmb.gz
     :so %
 To uninstall, use the |:RmVimball| command.
@@ -193,10 +199,15 @@ TODO							  *EnhancedJumps-todo*
 
 IDEAS							 *EnhancedJumps-ideas*
 
+CONTRIBUTING					    *EnhancedJumps-contribute*
+
+Report any bugs, send patches, or suggest features via the issue tracker at
+https://github.com/inkarkat/vim-EnhancedJumps/issues or email (address below).
+
 ==============================================================================
 HISTORY						       *EnhancedJumps-history*
 
-3.10	RELEASEME
+3.10	04-Nov-2018
 - ENH: Add <Leader><C-w><C-o> / <Leader><C-w><C-i> mappings to jump to the
   target buffer in an existing window.
 - Abort command sequence in case of jump errors.
@@ -268,7 +279,7 @@ BF: A '^\)' in the jump text caused "E55: Unmatched \)"
 First published version.
 
 ==============================================================================
-Copyright: (C) 2009-2016 Ingo Karkat
+Copyright: (C) 2009-2018 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

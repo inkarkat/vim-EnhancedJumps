@@ -2,16 +2,10 @@
 "
 " DEPENDENCIES:
 "
-" Copyright: (C) 2012-2014 Ingo Karkat
+" Copyright: (C) 2012-2018 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-"
-" REVISION	DATE		REMARKS
-"   3.01.002	05-Jun-2013	Change assertion into plugin exception, since
-"				the :changes command sometimes outputs just the
-"				header without a following ">" marker.
-"   3.00.001	08-Feb-2012	file creation from autoload/EnhancedJumps.vim.
 let s:save_cpo = &cpo
 set cpo&vim
 
