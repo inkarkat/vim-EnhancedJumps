@@ -6,33 +6,10 @@
 "   - ingo/msg.vim autoload script
 "   - ingo/window/dimensions.vim autoload script
 "
-" Copyright: (C) 2012-2016 Ingo Karkat
+" Copyright: (C) 2012-2018 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-"
-" REVISION	DATE		REMARKS
-"   3.10.009	28-Nov-2016	BUG: Typo in replaced error function name.
-"   3.10.008	18-Nov-2016	Use real error reporting with ingo#err#Set()
-"				(beeps are still simply issues, without aborting
-"				command sequences). We cannot use the return
-"				status of s:DoJump(), because that signifies
-"				whether a jump has occurred. We check via
-"				ingo#err#IsSet() instead.
-"   3.03.007	24-Feb-2015	Minor: Use ingo#compat#abs().
-"   3.02.006	05-May-2014	Use ingo#msg#WarningMsg().
-"   3.01.005	14-Jun-2013	Use ingo/msg.vim.
-"   3.01.004	05-Jun-2013	Handle it when the :changes command sometimes
-"				outputs just the header without a following ">"
-"				marker by catching the plugin exception in
-"				EnhancedJumps#Changes#GetJumps() and returning
-"				an empty List instead. This will cause the
-"				callers to fall back on the default g; / g,
-"				commands, which will then report the "E664:
-"				changelist is empty" error.
-"   3.01.003	08-Apr-2013	Move ingowindow.vim functions into ingo-library.
-"   3.00.002	09-Feb-2012	Modify s:FilterNearJumps() algorithm.
-"	001	08-Feb-2012	file creation
 let s:save_cpo = &cpo
 set cpo&vim
 

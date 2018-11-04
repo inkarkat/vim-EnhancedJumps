@@ -5,25 +5,10 @@
 "   - EnhancedJumps.vim autoload script
 "   - ingo/err.vim autoload script
 "
-" Copyright: (C) 2009-2016 Ingo Karkat
+" Copyright: (C) 2009-2018 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-"
-" REVISION	DATE		REMARKS
-"   3.10.005	19-Nov-2016	Make window search strategy when switching
-"				configurable as g:EnhancedJumps_SwitchStrategy.
-"   3.10.004	18-Nov-2016	Abort command sequence in case of jump errors.
-"				ENH: Add <Leader><C-w><C-o> / <Leader><C-w><C-i>
-"				mappings to jump to the target buffer in an
-"				existing window.
-"   3.02.003	29-Sep-2014	Add g:EnhancedJumps_CaptureJumpMessages
-"				configuration to turn off the capturing of the
-"				messages during the jump, as the used :redir may
-"				cause errors with another, concurrent capture.
-"   3.00.002	08-Feb-2012	Add mappings for jumps to far changes.
-"   2.00.001	27-Jun-2009	Split off autoload script.
-"				file creation
 
 " Avoid installing twice or when in unsupported Vim version.
 if exists('g:loaded_EnhancedJumps') || (v:version < 700)

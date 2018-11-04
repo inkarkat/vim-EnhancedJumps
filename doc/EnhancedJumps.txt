@@ -207,7 +207,7 @@ https://github.com/inkarkat/vim-EnhancedJumps/issues or email (address below).
 ==============================================================================
 HISTORY						       *EnhancedJumps-history*
 
-3.10	RELEASEME
+3.10	04-Nov-2018
 - ENH: Add <Leader><C-w><C-o> / <Leader><C-w><C-i> mappings to jump to the
   target buffer in an existing window.
 - Abort command sequence in case of jump errors.
