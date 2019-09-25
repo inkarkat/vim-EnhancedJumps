@@ -150,10 +150,19 @@ is used. If you like to use the first buffer (like |:sbuffer| does), configure: 
     let g:EnhancedJumps_SwitchStrategy = 'first'
 <
 
+					      *g:EnhancedJumps_NoMappings*
+To disable specific mappings, see |EnhancedJumps-remap|. If you want to
+disable all the mappings by the plugin, configure: >
+    let g:EnhancedJumps_NoMappings = 1
+<
+
 							 *EnhancedJumps-remap*
-If you do not want to override the built-in jump commands and use separate
-mappings, or change the special additional mappings, map your keys to the
-<Plug>... mapping targets _before_ sourcing the script (e.g. in your |vimrc|). >
+If you want to disable all the mappings by the plugin, set
+|g:EnhancedJumps_NoMappings|.
+If you do not want to override the built-in jump commands for specific
+mappings and use separate mappings, or change the special additional mappings,
+map the keys you want to disable to the <Plug>... mapping targets _before_
+sourcing the script (e.g. in your |vimrc|). >
     nmap {          <Plug>EnhancedJumpsOlder
     nmap }          <Plug>EnhancedJumpsNewer
     nmap g{         <Plug>EnhancedJumpsLocalOlder

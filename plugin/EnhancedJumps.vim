@@ -30,6 +30,9 @@ endif
 if ! exists('g:EnhancedJumps_SwitchStrategy')
     let g:EnhancedJumps_SwitchStrategy = 'nearest'
 endif
+if ! exists('g:EnhancedJumps_NoMappings')
+    let g:EnhancedJumps_NoMappings = 0
+endif
 
 
 "- mappings -------------------------------------------------------------------
@@ -51,37 +54,39 @@ nnoremap <silent> <Plug>EnhancedJumpsFarChangeNewer         :<C-u>if ! EnhancedJ
 nnoremap <silent> <Plug>EnhancedJumpsFarFallbackChangeOlder :<C-u>if ! EnhancedJumps#Changes#Jump(0,1)<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
 nnoremap <silent> <Plug>EnhancedJumpsFarFallbackChangeNewer :<C-u>if ! EnhancedJumps#Changes#Jump(1,1)<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
 
-if ! hasmapto('<Plug>EnhancedJumpsOlder', 'n')
-    nmap <C-o> <Plug>EnhancedJumpsOlder
-endif
-if ! hasmapto('<Plug>EnhancedJumpsNewer', 'n')
-    nmap <C-i> <Plug>EnhancedJumpsNewer
-endif
-if ! hasmapto('<Plug>EnhancedJumpsLocalOlder', 'n')
-    nmap g<C-o> <Plug>EnhancedJumpsLocalOlder
-endif
-if ! hasmapto('<Plug>EnhancedJumpsLocalNewer', 'n')
-    nmap g<C-i> <Plug>EnhancedJumpsLocalNewer
-endif
-if ! hasmapto('<Plug>EnhancedJumpsRemoteOlder', 'n')
-    nmap <Leader><C-o> <Plug>EnhancedJumpsRemoteOlder
-endif
-if ! hasmapto('<Plug>EnhancedJumpsRemoteNewer', 'n')
-    nmap <Leader><C-i> <Plug>EnhancedJumpsRemoteNewer
-endif
+if ! g:EnhancedJumps_NoMappings
+    if ! hasmapto('<Plug>EnhancedJumpsOlder', 'n')
+        nmap <C-o> <Plug>EnhancedJumpsOlder
+    endif
+    if ! hasmapto('<Plug>EnhancedJumpsNewer', 'n')
+        nmap <C-i> <Plug>EnhancedJumpsNewer
+    endif
+    if ! hasmapto('<Plug>EnhancedJumpsLocalOlder', 'n')
+        nmap g<C-o> <Plug>EnhancedJumpsLocalOlder
+    endif
+    if ! hasmapto('<Plug>EnhancedJumpsLocalNewer', 'n')
+        nmap g<C-i> <Plug>EnhancedJumpsLocalNewer
+    endif
+    if ! hasmapto('<Plug>EnhancedJumpsRemoteOlder', 'n')
+        nmap <Leader><C-o> <Plug>EnhancedJumpsRemoteOlder
+    endif
+    if ! hasmapto('<Plug>EnhancedJumpsRemoteNewer', 'n')
+        nmap <Leader><C-i> <Plug>EnhancedJumpsRemoteNewer
+    endif
 
-if ! hasmapto('<Plug>EnhancedJumpsSwitchRemoteOlder', 'n')
-    nmap <Leader><C-w><C-o> <Plug>EnhancedJumpsSwitchRemoteOlder
-endif
-if ! hasmapto('<Plug>EnhancedJumpsSwitchRemoteNewer', 'n')
-    nmap <Leader><C-w><C-i> <Plug>EnhancedJumpsSwitchRemoteNewer
-endif
+    if ! hasmapto('<Plug>EnhancedJumpsSwitchRemoteOlder', 'n')
+        nmap <Leader><C-w><C-o> <Plug>EnhancedJumpsSwitchRemoteOlder
+    endif
+    if ! hasmapto('<Plug>EnhancedJumpsSwitchRemoteNewer', 'n')
+        nmap <Leader><C-w><C-i> <Plug>EnhancedJumpsSwitchRemoteNewer
+    endif
 
-if ! hasmapto('<Plug>EnhancedJumpsFarFallbackChangeOlder', 'n')
-    nmap g; <Plug>EnhancedJumpsFarFallbackChangeOlder
-endif
-if ! hasmapto('<Plug>EnhancedJumpsFarFallbackChangeNewer', 'n')
-    nmap g, <Plug>EnhancedJumpsFarFallbackChangeNewer
+    if ! hasmapto('<Plug>EnhancedJumpsFarFallbackChangeOlder', 'n')
+        nmap g; <Plug>EnhancedJumpsFarFallbackChangeOlder
+    endif
+    if ! hasmapto('<Plug>EnhancedJumpsFarFallbackChangeNewer', 'n')
+        nmap g, <Plug>EnhancedJumpsFarFallbackChangeNewer
+    endif
 endif
 
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :

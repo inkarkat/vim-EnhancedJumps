@@ -139,9 +139,17 @@ is used. If you like to use the first buffer (like :sbuffer does), configure:
 
     let g:EnhancedJumps_SwitchStrategy = 'first'
 
-If you do not want to override the built-in jump commands and use separate
-mappings, or change the special additional mappings, map your keys to the
-<Plug>... mapping targets _before_ sourcing the script (e.g. in your vimrc).
+To disable specific mappings, see the next section. If you want to disable all
+the mappings by the plugin, configure:
+
+    let g:EnhancedJumps_NoMappings = 1
+
+If you want to disable all the mappings by the plugin, set
+`g:EnhancedJumps_NoMappings` as mentioned above.
+If you do not want to override the built-in jump commands for specific mappings
+and use separate mappings, or change the special additional mappings, map your
+keys to the <Plug>... mapping targets _before_ sourcing the script (e.g. in
+your vimrc).
 
     nmap {          <Plug>EnhancedJumpsOlder
     nmap }          <Plug>EnhancedJumpsNewer
