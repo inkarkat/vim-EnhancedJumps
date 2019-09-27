@@ -1,4 +1,4 @@
-ENHANCED JUMPS   
+ENHANCED JUMPS
 ===============================================================================
 _by Ingo Karkat_
 
@@ -7,13 +7,19 @@ DESCRIPTION
 
 This plugin enhances the built-in CTRL-I|/|CTRL-O jump commands:
 - After a jump, the line, column and text of the next jump target are printed:
+```
     next: 3,9 ENHANCED JUMPS    by Ingo Karkat
+```
 - An error message and the valid range for jumps in that direction is printed
   if a jump outside the jump list is attempted:
+```
     Only 8 older jump positions.
+```
 - In case the next jump would move to another buffer, only a warning is
   printed at the first attempt:
+```
     next: EnhancedJumps.vim
+```
   The jump to another buffer is only done if the same jump command is repeated
   once more immediately afterwards; like this: Pressing CTRL-O, noticing the
   warning, then quickly pressing CTRL-O again to overcome the warning.
@@ -122,14 +128,14 @@ To change the timeout, set a different value (in milliseconds):
 
     let g:stopFirstAndNotifyTimeoutLen = 2000
 
-Jumps to another buffer happen with "redir => l:fileJumpCapture". If other
+Jumps to another buffer happen with "redir =&gt; l:fileJumpCapture". If other
 plugins triggered by the (e.g. BufWinEnter) event do another :redir, this
 causes an error, because nested redirs are prohibited. You can avoid this
 problem by turning off the capture of jump messages:
 
     let g:EnhancedJumps_CaptureJumpMessages = 0
 
-If you don't want the <Leader>CTRL\_W\_CTRL-O / <Leader>CTRL\_W\_CTRL-I
+If you don't want the &lt;Leader&gt;CTRL\_W\_CTRL-O / &lt;Leader&gt;CTRL\_W\_CTRL-I
 mappings to search other tab pages for windows containing the jump target:
 
     let g:EnhancedJumps_UseTab = 0
@@ -139,9 +145,16 @@ is used. If you like to use the first buffer (like :sbuffer does), configure:
 
     let g:EnhancedJumps_SwitchStrategy = 'first'
 
+If you want no or only a few of the available mappings, you can completely
+turn off the creation of the default mappings by defining:
+
+    :let g:EnhancedJumps_no_mappings = 1
+
+This saves you from mapping dummy keys to all unwanted mapping targets.
+
 If you do not want to override the built-in jump commands and use separate
 mappings, or change the special additional mappings, map your keys to the
-<Plug>... mapping targets _before_ sourcing the script (e.g. in your vimrc).
+&lt;Plug&gt;... mapping targets _before_ sourcing the script (e.g. in your vimrc).
 
     nmap {          <Plug>EnhancedJumpsOlder
     nmap }          <Plug>EnhancedJumpsNewer
@@ -154,7 +167,7 @@ mappings, or change the special additional mappings, map your keys to the
 
 There are also mappings that do both local and remote jumps, the latter
 potentially to another window / tab page, i.e. a combination of CTRL-O and
-<Leader>CTRL-W\_CTRL-O. These are not mapped by default:
+&lt;Leader&gt;CTRL-W\_CTRL-O. These are not mapped by default:
 
     nmap ,{         <Plug>EnhancedJumpsSwitchOlder
     nmap ,}         <Plug>EnhancedJumpsSwitchNewer
@@ -196,11 +209,17 @@ https://github.com/inkarkat/vim-EnhancedJumps/issues or email (address below).
 HISTORY
 ------------------------------------------------------------------------------
 
+##### 3.11    RELEASEME
+- ENH: Allow to disable all default mappings via a single
+  g:EnhancedJumps\_no\_mappings configuration flag. Thanks to infokiller for the
+  patch.
+
 ##### 3.10    04-Nov-2018
-- ENH: Add <Leader><C-w><C-o> / <Leader><C-w><C-i> mappings to jump to the
+- ENH: Add &lt;Leader&gt;&lt;C-w&gt;&lt;C-o&gt; / &lt;Leader&gt;&lt;C-w&gt;&lt;C-i&gt; mappings to jump to the
   target buffer in an existing window.
 - Abort command sequence in case of jump errors.
-  __You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.028!__
+
+__You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.028!__
 
 ##### 3.03    18-Nov-2016
 - After a jump to another file, also re-query the jumps, because the jumplist
@@ -223,15 +242,18 @@ HISTORY
   Vimfiler plugin).
 - Use ingo#msg#WarningMsg().
 - Use ingo#record#Position().
-  __You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.020!__
+
+__You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.020!__
 
 ##### 3.01    19-Nov-2013
 - Handle it when the :changes command sometimes outputs just the header
-  without a following ">" marker by catching the plugin exception in
+  without a following "&gt;" marker by catching the plugin exception in
   EnhancedJumps#Changes#GetJumps() and returning an empty List instead. This
   will cause the callers to fall back on the default g; / g, commands, which
   will then report the "E664: changelist is empty" error.
-- Add dependency to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)). __You need to separately
+- Add dependency to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)).
+
+__You need to separately
   install ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.008 (or higher)!__
 
 ##### 3.00    09-Feb-2012
@@ -255,7 +277,7 @@ error occurred.
 cursor one position to the right of the jump target.
 
 ##### 1.11    14-Jul-2009
-- BF: A '^\)' in the jump text caused "E55: Unmatched \)"
+- BF: A '^\\)' in the jump text caused "E55: Unmatched \\)"
 
 ##### 1.10    06-Jul-2009
 - ENH: To overcome the next buffer warning, a previously given [count] need
@@ -268,7 +290,7 @@ cursor one position to the right of the jump target.
 - First published version.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2009-2018 Ingo Karkat -
+Copyright: (C) 2009-2019 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
-Maintainer:     Ingo Karkat <ingo@karkat.de>
+Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;

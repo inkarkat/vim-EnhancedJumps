@@ -5,7 +5,7 @@
 "   - EnhancedJumps.vim autoload script
 "   - ingo/err.vim autoload script
 "
-" Copyright: (C) 2009-2018 Ingo Karkat
+" Copyright: (C) 2009-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -50,6 +50,10 @@ nnoremap <silent> <Plug>EnhancedJumpsFarChangeOlder         :<C-u>if ! EnhancedJ
 nnoremap <silent> <Plug>EnhancedJumpsFarChangeNewer         :<C-u>if ! EnhancedJumps#Changes#Jump(1,0)<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
 nnoremap <silent> <Plug>EnhancedJumpsFarFallbackChangeOlder :<C-u>if ! EnhancedJumps#Changes#Jump(0,1)<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
 nnoremap <silent> <Plug>EnhancedJumpsFarFallbackChangeNewer :<C-u>if ! EnhancedJumps#Changes#Jump(1,1)<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+
+if exists('g:EnhancedJumps_no_mappings')
+    finish
+endif
 
 if ! hasmapto('<Plug>EnhancedJumpsOlder', 'n')
     nmap <C-o> <Plug>EnhancedJumpsOlder

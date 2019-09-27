@@ -149,7 +149,11 @@ By default, the nearest window that contains the buffer with the jump target
 is used. If you like to use the first buffer (like |:sbuffer| does), configure: >
     let g:EnhancedJumps_SwitchStrategy = 'first'
 <
-
+						 *g:EnhancedJumps_no_mappings*
+If you want no or only a few of the available mappings, you can completely
+turn off the creation of the default mappings by defining: >
+    :let g:EnhancedJumps_no_mappings = 1
+This saves you from mapping dummy keys to all unwanted mapping targets.
 							 *EnhancedJumps-remap*
 If you do not want to override the built-in jump commands and use separate
 mappings, or change the special additional mappings, map your keys to the
@@ -206,6 +210,11 @@ https://github.com/inkarkat/vim-EnhancedJumps/issues or email (address below).
 
 ==============================================================================
 HISTORY						       *EnhancedJumps-history*
+
+3.11	RELEASEME
+- ENH: Allow to disable all default mappings via a single
+  g:EnhancedJumps_no_mappings configuration flag. Thanks to infokiller for the
+  patch.
 
 3.10	04-Nov-2018
 - ENH: Add <Leader><C-w><C-o> / <Leader><C-w><C-i> mappings to jump to the
@@ -279,7 +288,7 @@ BF: A '^\)' in the jump text caused "E55: Unmatched \)"
 First published version.
 
 ==============================================================================
-Copyright: (C) 2009-2018 Ingo Karkat
+Copyright: (C) 2009-2019 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
