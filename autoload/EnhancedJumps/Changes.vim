@@ -6,7 +6,7 @@
 "   - ingo/msg.vim autoload script
 "   - ingo/window/dimensions.vim autoload script
 "
-" Copyright: (C) 2012-2018 Ingo Karkat
+" Copyright: (C) 2012-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -63,7 +63,7 @@ function! s:warn( warningmsg )
     redraw	" After the jump, a redraw is pending. Do it now or the message may vanish.
     call ingo#msg#WarningMsg(a:warningmsg)
 endfunction
-function! s:DoJump( count, isNewer )
+function! EnhancedJumps#Changes#Jump( count, isNewer )
     if a:count == 0
 	execute "normal! \<C-\>\<C-n>\<Esc>"
 	return 0
@@ -84,7 +84,7 @@ function! s:DoJump( count, isNewer )
     endtry
 endfunction
 
-function! EnhancedJumps#Changes#Jump( isNewer, isFallbackToNearChanges )
+function! EnhancedJumps#Changes#Go( JumpFuncref, isNewer, isFallbackToNearChanges )
     call ingo#err#Clear('EnhancedJumps')
     let l:jumpDirection = (a:isNewer ? 'newer' : 'older')
     let l:count = v:count1
@@ -92,7 +92,7 @@ function! EnhancedJumps#Changes#Jump( isNewer, isFallbackToNearChanges )
     if empty(l:jumps)
 	if a:isFallbackToNearChanges
 	    " Perform the [count]'th near jump.
-	    if s:DoJump(l:count, a:isNewer)
+	    if call(a:JumpFuncref, [l:count, a:isNewer])
 		" Only print the warning when the jump was successful; it may
 		" have already errored out with "At start / end of changelist".
 		call s:warn(printf('No %s far change', l:jumpDirection))
@@ -100,7 +100,7 @@ function! EnhancedJumps#Changes#Jump( isNewer, isFallbackToNearChanges )
 	else
 	    call ingo#err#Set(printf('No %s far change', l:jumpDirection), 'EnhancedJumps')
 	    " Still execute the a zero-jump command to cause the customary beep.
-	    call s:DoJump(0, a:isNewer)
+	    call call(a:JumpFuncref, [0, a:isNewer])
 	endif
 
 	return ! ingo#err#IsSet('EnhancedJumps')
@@ -120,7 +120,7 @@ function! EnhancedJumps#Changes#Jump( isNewer, isFallbackToNearChanges )
     " the given count and must be retrieved from the jump line.
     let l:jumpCount = EnhancedJumps#Common#ParseJumpLine(l:targetJump).count
 "****D echomsg '****' l:count l:jumpCount
-    if s:DoJump(l:jumpCount, a:isNewer) && l:isFallbackNearJump
+    if call(a:JumpFuncref, [l:jumpCount, a:isNewer]) && l:isFallbackNearJump
 	" Only print the warning when the jump was successful; it may
 	" have already errored out with "At start / end of changelist".
 	call s:warn(printf('No more %d %s far changes', l:count, l:jumpDirection))

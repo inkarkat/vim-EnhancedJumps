@@ -48,10 +48,10 @@ nnoremap <silent> <Plug>EnhancedJumpsSwitchNewer       :<C-u>if ! EnhancedJumps#
 nnoremap <silent> <Plug>EnhancedJumpsSwitchRemoteOlder :<C-u>if ! EnhancedJumps#Go('EnhancedJumps#Switch',     0, 'remote')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
 nnoremap <silent> <Plug>EnhancedJumpsSwitchRemoteNewer :<C-u>if ! EnhancedJumps#Go('EnhancedJumps#Switch',     1, 'remote')<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
 
-nnoremap <silent> <Plug>EnhancedJumpsFarChangeOlder         :<C-u>if ! EnhancedJumps#Changes#Jump(0,0)<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
-nnoremap <silent> <Plug>EnhancedJumpsFarChangeNewer         :<C-u>if ! EnhancedJumps#Changes#Jump(1,0)<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
-nnoremap <silent> <Plug>EnhancedJumpsFarFallbackChangeOlder :<C-u>if ! EnhancedJumps#Changes#Jump(0,1)<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
-nnoremap <silent> <Plug>EnhancedJumpsFarFallbackChangeNewer :<C-u>if ! EnhancedJumps#Changes#Jump(1,1)<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsFarChangeOlder         :<C-u>if ! EnhancedJumps#Changes#Go('EnhancedJumps#Changes#Jump', 0, 0)<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsFarChangeNewer         :<C-u>if ! EnhancedJumps#Changes#Go('EnhancedJumps#Changes#Jump', 1, 0)<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsFarFallbackChangeOlder :<C-u>if ! EnhancedJumps#Changes#Go('EnhancedJumps#Changes#Jump', 0, 1)<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
+nnoremap <silent> <Plug>EnhancedJumpsFarFallbackChangeNewer :<C-u>if ! EnhancedJumps#Changes#Go('EnhancedJumps#Changes#Jump', 1, 1)<Bar>echoerr ingo#err#Get('EnhancedJumps')<Bar>endif<CR>
 
 if exists('g:EnhancedJumps_no_mappings')
     finish
