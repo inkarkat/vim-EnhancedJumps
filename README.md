@@ -59,6 +59,10 @@ USAGE
                             briefly jumped to another, and now want to recall
                             older positions without considering the other file.
 
+    {Visual}g<CTRL-O>, {Visual}g<CTRL-I>
+                            Extend the visual selection to the [count] older /
+                            newer cursor position in the current buffer.
+
     <Leader><CTRL-O>, <Leader><CTRL-I>
                             Go to [count] older / newer cursor position in another
                             buffer. Jumps inside the current buffer are not
@@ -91,6 +95,9 @@ USAGE
                             (not a motion command)
     g,                      Go to [count] newer far change.
                             Just like g; but in the opposite direction.
+
+    {Visual}g; {Visual}g,   Visual mode variants that extend the selection to the
+                            older / newer far change.
 
 INSTALLATION
 ------------------------------------------------------------------------------
@@ -158,8 +165,8 @@ mappings, or change the special additional mappings, map your keys to the
 
     nmap {          <Plug>EnhancedJumpsOlder
     nmap }          <Plug>EnhancedJumpsNewer
-    nmap g{         <Plug>EnhancedJumpsLocalOlder
-    nmap g}         <Plug>EnhancedJumpsLocalNewer
+    map g{          <Plug>EnhancedJumpsLocalOlder
+    map g}          <Plug>EnhancedJumpsLocalNewer
     nmap <Leader>{  <Plug>EnhancedJumpsRemoteOlder
     nmap <Leader>}  <Plug>EnhancedJumpsRemoteNewer
     nmap <C-w>{     <Plug>EnhancedJumpsSwitchRemoteOlder
@@ -175,18 +182,18 @@ potentially to another window / tab page, i.e. a combination of CTRL-O and
 For the change list jump commands, you can choose between two alternatives,
 the default one that falls back to near changes when there are no far changes
 
-    nmap z; <Plug>EnhancedJumpsFarFallbackChangeOlder
-    nmap z, <Plug>EnhancedJumpsFarFallbackChangeNewer
+    map z; <Plug>EnhancedJumpsFarFallbackChangeOlder
+    map z, <Plug>EnhancedJumpsFarFallbackChangeNewer
 
 and a pure "far jumps" variant:
 
-    nmap z; <Plug>EnhancedJumpsFarChangeOlder
-    nmap z, <Plug>EnhancedJumpsFarChangeNewer
+    map z; <Plug>EnhancedJumpsFarChangeOlder
+    map z, <Plug>EnhancedJumpsFarChangeNewer
 
 To disable the special additional mappings:
 
-    nmap <Plug>DisableEnhancedJumpsLocalOlder  <Plug>EnhancedJumpsLocalOlder
-    nmap <Plug>DisableEnhancedJumpsLocalNewer  <Plug>EnhancedJumpsLocalNewer
+    map <Plug>DisableEnhancedJumpsLocalOlder  <Plug>EnhancedJumpsLocalOlder
+    map <Plug>DisableEnhancedJumpsLocalNewer  <Plug>EnhancedJumpsLocalNewer
     nmap <Plug>DisableEnhancedJumpsRemoteOlder <Plug>EnhancedJumpsRemoteOlder
     nmap <Plug>DisableEnhancedJumpsRemoteNewer <Plug>EnhancedJumpsRemoteNewer
 
@@ -213,6 +220,10 @@ HISTORY
 - ENH: Allow to disable all default mappings via a single
   g:EnhancedJumps\_no\_mappings configuration flag. Thanks to infokiller for the
   patch.
+- ENH: Add {Visual}g&lt;CTRL-O&gt; / {Visual}g&lt;CTRL-I&gt; visual mode variants, as the
+  jump is guaranteed to be within the current buffer. Also add omaps.
+- ENH: Add {Visual}g; / {Visual}g, operator-pending and visual mode variants,
+  too.
 
 ##### 3.10    04-Nov-2018
 - ENH: Add &lt;Leader&gt;&lt;C-w&gt;&lt;C-o&gt; / &lt;Leader&gt;&lt;C-w&gt;&lt;C-i&gt; mappings to jump to the

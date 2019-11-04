@@ -9,7 +9,7 @@
 "   - ingo/msg.vim autoload script
 "   - ingo/record.vim autoload script
 "
-" Copyright: (C) 2009-2018 Ingo Karkat
+" Copyright: (C) 2009-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -128,6 +128,16 @@ function! EnhancedJumps#Jump( targetJump, count, isNewer )
 	call ingo#err#SetVimException('EnhancedJumps')
 	return 0
     endtry
+endfunction
+function! EnhancedJumps#VisualJump( targetJump, count, isNewer ) abort
+    if ! EnhancedJumps#Jump(a:targetJump, a:count, a:isNewer)
+	return 0
+    endif
+
+    let l:position = getpos('.')
+    normal! gv
+    call setpos('.', l:position)
+    return 1
 endfunction
 function! EnhancedJumps#Switch( targetJump, count, isNewer )
     if a:count == 0
