@@ -102,6 +102,9 @@ g;			Go to [count] older far change (that lies outside the
 			(not a motion command)
 g,			Go to [count] newer far change.
 			Just like |g;| but in the opposite direction.
+								 *v_g;* *v_g,*
+{Visual}g; {Visual}g,	Visual mode variants that extend the selection to the
+			older / newer far change.
 
 ==============================================================================
 INSTALLATION					  *EnhancedJumps-installation*
@@ -182,13 +185,19 @@ For the change list jump commands, you can choose between two alternatives,
 the default one that falls back to near changes when there are no far changes >
     nmap z; <Plug>EnhancedJumpsFarFallbackChangeOlder
     nmap z, <Plug>EnhancedJumpsFarFallbackChangeNewer
+    xmap z; <Plug>EnhancedJumpsFarFallbackChangeOlder
+    xmap z, <Plug>EnhancedJumpsFarFallbackChangeNewer
 and a pure "far jumps" variant: >
     nmap z; <Plug>EnhancedJumpsFarChangeOlder
     nmap z, <Plug>EnhancedJumpsFarChangeNewer
+    xmap z; <Plug>EnhancedJumpsFarChangeOlder
+    xmap z, <Plug>EnhancedJumpsFarChangeNewer
 <
 To disable the special additional mappings: >
     nmap <Plug>DisableEnhancedJumpsLocalOlder  <Plug>EnhancedJumpsLocalOlder
     nmap <Plug>DisableEnhancedJumpsLocalNewer  <Plug>EnhancedJumpsLocalNewer
+    xmap <Plug>DisableEnhancedJumpsLocalOlder  <Plug>EnhancedJumpsLocalOlder
+    xmap <Plug>DisableEnhancedJumpsLocalNewer  <Plug>EnhancedJumpsLocalNewer
     nmap <Plug>DisableEnhancedJumpsRemoteOlder <Plug>EnhancedJumpsRemoteOlder
     nmap <Plug>DisableEnhancedJumpsRemoteNewer <Plug>EnhancedJumpsRemoteNewer
 <
@@ -221,8 +230,9 @@ HISTORY						       *EnhancedJumps-history*
 - ENH: Allow to disable all default mappings via a single
   g:EnhancedJumps_no_mappings configuration flag. Thanks to infokiller for the
   patch.
-- ENH: Add {Visual}g<CTRL-O>, {Visual}g<CTRL-I> visual mode variants, as the
+- ENH: Add {Visual}g<CTRL-O> / {Visual}g<CTRL-I> visual mode variants, as the
   jump is guaranteed to be within the current buffer.
+- ENH: Add {Visual}g; / {Visual}g, visual mode variants, too.
 
 3.10	04-Nov-2018
 - ENH: Add <Leader><C-w><C-o> / <Leader><C-w><C-i> mappings to jump to the

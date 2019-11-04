@@ -83,6 +83,16 @@ function! EnhancedJumps#Changes#Jump( count, isNewer )
 	return 0
     endtry
 endfunction
+function! EnhancedJumps#Changes#VisualJump( count, isNewer ) abort
+    if ! EnhancedJumps#Changes#Jump(a:count, a:isNewer)
+	return 0
+    endif
+
+    let l:position = getpos('.')
+    normal! gv
+    call setpos('.', l:position)
+    return 1
+endfunction
 
 function! EnhancedJumps#Changes#Go( JumpFuncref, isNewer, isFallbackToNearChanges )
     call ingo#err#Clear('EnhancedJumps')
