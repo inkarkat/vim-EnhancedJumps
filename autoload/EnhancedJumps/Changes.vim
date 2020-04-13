@@ -1,10 +1,7 @@
 " Changes.vim: Enhanced change list navigation commands.
 "
 " DEPENDENCIES:
-"   - EnhancedJumps/Common.vim autoload script
-"   - ingo/err.vim autoload script
-"   - ingo/msg.vim autoload script
-"   - ingo/window/dimensions.vim autoload script
+"   - ingo-library.vim plugin
 "
 " Copyright: (C) 2012-2020 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.

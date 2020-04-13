@@ -2,10 +2,9 @@
 "
 " DEPENDENCIES:
 "   - Requires Vim 7.0 or higher.
-"   - EnhancedJumps.vim autoload script
-"   - ingo/err.vim autoload script
+"   - ingo-library.vim plugin
 "
-" Copyright: (C) 2009-2019 Ingo Karkat
+" Copyright: (C) 2009-2020 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>

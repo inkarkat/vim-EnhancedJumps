@@ -1,13 +1,7 @@
 " EnhancedJumps.vim: Enhanced jump list navigation commands.
 "
 " DEPENDENCIES:
-"   - EnhancedJumps/Common.vim autoload script
-"   - ingo/avoidprompt.vim autoload script
-"   - ingo/buffer/locate.vim autoload script
-"   - ingo/compat.vim autoload script
-"   - ingo/err.vim autoload script
-"   - ingo/msg.vim autoload script
-"   - ingo/record.vim autoload script
+"   - ingo-library.vim plugin
 "
 " Copyright: (C) 2009-2020 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.

@@ -1,6 +1,7 @@
 " Common.vim: Shared functionality for dealing with jump lists.
 "
 " DEPENDENCIES:
+"   - ingo-library.vim plugin
 "
 " Copyright: (C) 2012-2020 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
