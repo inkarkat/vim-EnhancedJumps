@@ -129,7 +129,7 @@ function! EnhancedJumps#Common#EchoFollowingMessage( followingJump, jumpDirectio
 	echon ingo#avoidprompt#Truncate(getline(l:following.lnum), l:reservedColumns)
 	echohl None
     else
-	call s:Echo(a:fileJumpMessages, printf('next%s: %s', a:filterName, s:BufferName(l:following.text)))
+	call s:Echo(a:fileJumpMessages, printf('next%s: %s', a:filterName, EnhancedJumps#Common#BufferName(l:following.text)))
     endif
 endfunction
 

@@ -178,7 +178,7 @@ function! EnhancedJumps#Go( JumpFuncref, isNewer, filter )
 	    " of the next jump position, the jump command is executed first and
 	    " the indication only printed if the jump didn't cause an error.
 	    if call(a:JumpFuncref, [l:targetJump, l:jumpCount, a:isNewer])
-		call EnhancedJumps#Common#EchoFollowingMessage(l:followingJump, l:jumpDirection, l:filterName, '')
+		call EnhancedJumps#Common#EchoFollowingMessage(l:followingJump, l:jumpDirection, l:filterName, [])
 	    endif
 	else
 	    " The next jump would move to another buffer. Stop and notify first,
