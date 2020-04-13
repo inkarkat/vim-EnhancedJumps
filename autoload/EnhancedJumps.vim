@@ -9,7 +9,7 @@
 "   - ingo/msg.vim autoload script
 "   - ingo/record.vim autoload script
 "
-" Copyright: (C) 2009-2019 Ingo Karkat
+" Copyright: (C) 2009-2020 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -48,10 +48,10 @@ function! s:FilterJumps( jumps, filter, isNewer )
     if empty(a:filter)
 	return a:jumps
     elseif a:filter ==# 'local'
-	return filter(a:jumps, 's:IsJumpInCurrentBuffer(EnhancedJumps#Common#ParseJumpLine(v:val))')
+	return filter(a:jumps, 'EnhancedJumps#Common#IsJumpInCurrentBuffer(EnhancedJumps#Common#ParseJumpLine(v:val))')
     elseif a:filter ==# 'remote'
 	return s:FilterDuplicateSubsequentFiles(
-	\   filter(a:jumps, '! s:IsJumpInCurrentBuffer(EnhancedJumps#Common#ParseJumpLine(v:val))'),
+	\   filter(a:jumps, '! EnhancedJumps#Common#IsJumpInCurrentBuffer(EnhancedJumps#Common#ParseJumpLine(v:val))'),
 	\   a:isNewer
 	\)
     else
@@ -71,35 +71,8 @@ function! s:GetCount()
 	return v:count1
     endif
 endfunction
-function! s:BufferName( jumpText )
-    return (empty(a:jumpText) ? '[No name]' : a:jumpText)
-endfunction
 function! s:WasLastStop( current, record )
     return (! empty(a:current) && ! empty(a:record) && a:current[0:-2] == a:record[0:-2]) && (a:current[-1] - a:record[-1] <= (g:stopFirstAndNotifyTimeoutLen / 1000))
-endfunction
-function! s:IsInvalid( text )
-    if a:text ==# '-invalid-'
-	" Though invalid jumps are caused by marks in another (modified) file,
-	" treat them as belonging to the current buffer; after all, Vim doesn't
-	" move to that file, and just prints the "E19: Mark has invalid line
-	" number" error.
-	return 1
-    endif
-endfunction
-function! s:IsJumpInCurrentBuffer( parsedJump )
-    if empty(a:parsedJump.text)
-	" In case there is no jump text, the corresponding line in the current
-	" buffer also should be empty.
-	let l:regexp = '^$'
-    else
-	" The jump text omits any indent, may be truncated and has non-printable
-	" characters rendered as ^X (so any ^X substring may either represent a
-	" non-printable single character or the literal two-character ^X
-	" sequence). The regexp has to consider this.
-	let l:regexp = '\V' . substitute(escape(a:parsedJump.text, '\'), '\^\%(\\\\\|\p\)', '\\%(\0\\|\\.\\)', 'g')
-    endif
-"****D echomsg '****' l:regexp
-    return getline(a:parsedJump.lnum) =~# l:regexp
 endfunction
 function! EnhancedJumps#Jump( targetJump, count, isNewer )
     if a:count == 0
@@ -145,7 +118,7 @@ function! EnhancedJumps#Switch( targetJump, count, isNewer )
 	return 0
     endif
     let l:target = EnhancedJumps#Common#ParseJumpLine(a:targetJump)
-    if ! s:IsJumpInCurrentBuffer(l:target)
+    if ! EnhancedJumps#Common#IsJumpInCurrentBuffer(l:target)
 	let l:bufnr = bufnr(ingo#escape#file#bufnameescape(l:target.text, 1, 0))
 	if l:bufnr != -1 && bufnr('') != l:bufnr
 	    let [l:tabPageNr, l:winNr] = ingo#buffer#locate#Window(g:EnhancedJumps_SwitchStrategy, g:EnhancedJumps_UseTab, l:bufnr)
@@ -166,42 +139,6 @@ function! EnhancedJumps#Switch( targetJump, count, isNewer )
     endif
 
     return EnhancedJumps#Jump(a:targetJump, a:count, a:isNewer)
-endfunction
-function! s:Echo( fileJumpMessages, message )
-    if empty(a:fileJumpMessages)
-	echo ingo#avoidprompt#Truncate(a:message)
-    elseif &cmdheight > 1 || len(a:fileJumpMessages) > 1
-	for l:message in a:fileJumpMessages
-	    echomsg l:message
-	endfor
-	echo ingo#avoidprompt#Truncate(a:message)
-    else
-	let l:message = ingo#avoidprompt#Truncate(a:message, ingo#compat#strdisplaywidth(a:fileJumpMessages[0]) + 1)    " The captured jump message may contain unprintable or non-ASCII characters; use strdisplaywidth().
-	echomsg a:fileJumpMessages[0] . (empty(l:message) ? '' : ' ')
-	echon l:message
-    endif
-endfunction
-function! s:EchoFollowingMessage( followingJump, jumpDirection, filterName, fileJumpMessages )
-    let l:following = EnhancedJumps#Common#ParseJumpLine(a:followingJump)
-    if empty(a:followingJump)
-	redraw
-	call s:Echo(a:fileJumpMessages, printf('No %s%s jump position', a:jumpDirection, a:filterName))
-    elseif s:IsInvalid(l:following.text)
-	redraw
-	call s:Echo(a:fileJumpMessages, printf('Next%s jump position is invalid', a:filterName))
-    elseif s:IsJumpInCurrentBuffer(l:following)
-	let l:header = printf('next%s: %d,%d ', a:filterName, l:following.lnum, l:following.col)
-	call s:Echo(a:fileJumpMessages, l:header)
-	let l:reservedColumns = len(l:header)	" l:header is printable ASCII-only, so can use len() for text width.
-	if len(a:fileJumpMessages) == 1 && &cmdheight == 1
-	    let l:reservedColumns += ingo#compat#strdisplaywidth(a:fileJumpMessages[0], l:reservedColumns) + 1  " The captured jump message may contain unprintable or non-ASCII characters; use strdisplaywidth(); it starts after the header, so consider its width, too.
-	endif
-	echohl Directory
-	echon ingo#avoidprompt#Truncate(getline(l:following.lnum), l:reservedColumns)
-	echohl None
-    else
-	call s:Echo(a:fileJumpMessages, printf('next%s: %s', a:filterName, s:BufferName(l:following.text)))
-    endif
 endfunction
 function! EnhancedJumps#Go( JumpFuncref, isNewer, filter )
     call ingo#err#Clear('EnhancedJumps')
@@ -233,15 +170,15 @@ function! EnhancedJumps#Go( JumpFuncref, isNewer, filter )
 	call call(a:JumpFuncref, [l:targetJump, l:jumpCount, a:isNewer])
     else
 	let l:target = EnhancedJumps#Common#ParseJumpLine(l:targetJump)
-	if s:IsInvalid(l:target.text)
+	if EnhancedJumps#Common#IsInvalid(l:target.text)
 	    " Do nothing here, the jump command will print an error.
 	    call call(a:JumpFuncref, [l:jumpCount, a:isNewer])
-	elseif s:IsJumpInCurrentBuffer(l:target)
+	elseif EnhancedJumps#Common#IsJumpInCurrentBuffer(l:target)
 	    " To avoid that the jump command's output overwrites the indication
 	    " of the next jump position, the jump command is executed first and
 	    " the indication only printed if the jump didn't cause an error.
 	    if call(a:JumpFuncref, [l:targetJump, l:jumpCount, a:isNewer])
-		call s:EchoFollowingMessage(l:followingJump, l:jumpDirection, l:filterName, '')
+		call EnhancedJumps#Common#EchoFollowingMessage(l:followingJump, l:jumpDirection, l:filterName, '')
 	    endif
 	else
 	    " The next jump would move to another buffer. Stop and notify first,
@@ -277,7 +214,7 @@ function! EnhancedJumps#Go( JumpFuncref, isNewer, filter )
 		\	0, ''
 		\)
 
-		call s:EchoFollowingMessage(l:followingJump, l:jumpDirection, l:filterName,
+		call EnhancedJumps#Common#EchoFollowingMessage(l:followingJump, l:jumpDirection, l:filterName,
 		\   filter(
 		\	split(l:fileJumpCapture, "\n"),
 		\	'! empty(v:val)'
@@ -294,7 +231,7 @@ function! EnhancedJumps#Go( JumpFuncref, isNewer, filter )
 		" jump command to overcome the warning.
 		let t:lastJumpCommandCount = l:count
 
-		call ingo#msg#WarningMsg(ingo#avoidprompt#Truncate(printf('next%s: %s', l:filterName, s:BufferName(l:target.text))))
+		call ingo#msg#WarningMsg(ingo#avoidprompt#Truncate(printf('next%s: %s', l:filterName, EnhancedJumps#Common#BufferName(l:target.text))))
 		" Signal edge case via beep.
 		execute "normal! \<C-\>\<C-n>\<Esc>"
 
