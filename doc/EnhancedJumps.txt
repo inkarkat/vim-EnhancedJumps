@@ -226,6 +226,8 @@ HISTORY						       *EnhancedJumps-history*
   jump is guaranteed to be within the current buffer. Also add omaps.
 - ENH: Add {Visual}g; / {Visual}g, operator-pending and visual mode variants,
   too.
+- ENH: Echo preview of next far change after g; / g, jump, just like the jump
+  list mappings do. Suggested by marconetto.
 
 3.10	04-Nov-2018
 - ENH: Add <Leader><C-w><C-o> / <Leader><C-w><C-i> mappings to jump to the
@@ -299,7 +301,7 @@ BF: A '^\)' in the jump text caused "E55: Unmatched \)"
 First published version.
 
 ==============================================================================
-Copyright: (C) 2009-2019 Ingo Karkat
+Copyright: (C) 2009-2020 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

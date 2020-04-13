@@ -6,7 +6,7 @@
 "   - ingo/msg.vim autoload script
 "   - ingo/window/dimensions.vim autoload script
 "
-" Copyright: (C) 2012-2019 Ingo Karkat
+" Copyright: (C) 2012-2020 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -130,10 +130,20 @@ function! EnhancedJumps#Changes#Go( JumpFuncref, isNewer, isFallbackToNearChange
     " the given count and must be retrieved from the jump line.
     let l:jumpCount = EnhancedJumps#Common#ParseJumpLine(l:targetJump).count
 "****D echomsg '****' l:count l:jumpCount
-    if call(a:JumpFuncref, [l:jumpCount, a:isNewer]) && l:isFallbackNearJump
-	" Only print the warning when the jump was successful; it may
-	" have already errored out with "At start / end of changelist".
-	call s:warn(printf('No more %d %s far changes', l:count, l:jumpDirection))
+    if call(a:JumpFuncref, [l:jumpCount, a:isNewer])
+	if l:isFallbackNearJump
+	    " Only print the warning when the jump was successful; it may
+	    " have already errored out with "At start / end of changelist".
+	    call s:warn(printf('No more %d %s far changes', l:count, l:jumpDirection))
+	else
+	    let l:nextJump = get(EnhancedJumps#Changes#GetJumps(a:isNewer), 0, '')
+	    if empty(l:nextJump)
+		redraw
+		echo printf('Reached the %s of far changes', (a:isNewer ? 'end' : 'start'))
+	    else
+		call EnhancedJumps#Common#EchoFollowingMessage(l:nextJump, l:jumpDirection, ' far change', [])
+	    endif
+	endif
     endif
     return ! ingo#err#IsSet('EnhancedJumps')
 endfunction
