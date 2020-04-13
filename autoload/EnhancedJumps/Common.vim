@@ -125,9 +125,7 @@ function! EnhancedJumps#Common#EchoFollowingMessage( followingJump, jumpDirectio
 	if len(a:fileJumpMessages) == 1 && &cmdheight == 1
 	    let l:reservedColumns += ingo#compat#strdisplaywidth(a:fileJumpMessages[0], l:reservedColumns) + 1  " The captured jump message may contain unprintable or non-ASCII characters; use strdisplaywidth(); it starts after the header, so consider its width, too.
 	endif
-	echohl Directory
-	echon ingo#avoidprompt#Truncate(getline(l:following.lnum), l:reservedColumns)
-	echohl None
+	call ingo#msg#HighlightN(ingo#avoidprompt#Truncate(getline(l:following.lnum), l:reservedColumns), 'Directory')
     else
 	call s:Echo(a:fileJumpMessages, printf('next%s: %s', a:filterName, EnhancedJumps#Common#BufferName(l:following.text)))
     endif
