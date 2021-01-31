@@ -2,6 +2,37 @@ ENHANCED JUMPS
 ===============================================================================
 _by Ingo Karkat_
 
+This plugin enhances the built-in CTRL-I|/|CTRL-O jump commands.  
+Requires the [ingo-library.vim](https://github.com/inkarkat/vim-ingo-library)
+plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)),
+version 1.028 or higher.
+
+INSTALLATION
+------------------------------------------------------------------------------
+
+The code is hosted in a Git repo at
+    https://github.com/inkarkat/vim-EnhancedJumps  
+To install it, you can use your favorite plugin manager (vim-plug, Vundle, etc),
+or "git clone" into a directory used for Vim packages.  
+Releases are on the "stable" branch, the latest unstable development snapshot
+on "master".
+
+This script is also packaged as a vimball. If you have the "gunzip"
+decompressor in your PATH, simply edit the \*.vmb.gz package in Vim; otherwise,
+decompress the archive first, e.g. using WinZip. Inside Vim, install by
+sourcing the vimball or via the :UseVimball command.
+
+    vim EnhancedJumps*.vmb.gz
+    :so %
+
+To uninstall, use the :RmVimball command.
+
+### DEPENDENCIES
+
+- Requires the [ingo-library.vim](https://github.com/inkarkat/vim-ingo-library) plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)), version 1.028 or
+  higher.
+- Requires Vim 7.0 or higher.
+
 DESCRIPTION
 ------------------------------------------------------------------------------
 
@@ -99,30 +130,6 @@ USAGE
     {Visual}g; {Visual}g,   Visual mode variants that extend the selection to the
                             older / newer far change.
 
-INSTALLATION
-------------------------------------------------------------------------------
-
-The code is hosted in a Git repo at
-    https://github.com/inkarkat/vim-EnhancedJumps
-You can use your favorite plugin manager, or "git clone" into a directory used
-for Vim packages. Releases are on the "stable" branch, the latest unstable
-development snapshot on "master".
-
-This script is also packaged as a vimball. If you have the "gunzip"
-decompressor in your PATH, simply edit the \*.vmb.gz package in Vim; otherwise,
-decompress the archive first, e.g. using WinZip. Inside Vim, install by
-sourcing the vimball or via the :UseVimball command.
-
-    vim EnhancedJumps*.vmb.gz
-    :so %
-
-To uninstall, use the :RmVimball command.
-
-### DEPENDENCIES
-
-- Requires Vim 7.0 or higher.
-- Requires the ingo-library.vim plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)), version 1.028 or
-  higher.
 
 CONFIGURATION
 ------------------------------------------------------------------------------
