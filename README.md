@@ -216,7 +216,7 @@ https://github.com/inkarkat/vim-EnhancedJumps/issues or email (address below).
 HISTORY
 ------------------------------------------------------------------------------
 
-##### 3.11    RELEASEME
+##### 3.11    10-Nov-2024
 - ENH: Allow to disable all default mappings via a single
   g:EnhancedJumps\_no\_mappings configuration flag. Thanks to infokiller for the
   patch.
@@ -303,7 +303,7 @@ cursor one position to the right of the jump target.
 - First published version.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2009-2020 Ingo Karkat -
+Copyright: (C) 2009-2024 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
 Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;
