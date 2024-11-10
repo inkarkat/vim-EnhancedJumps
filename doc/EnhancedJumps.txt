@@ -218,7 +218,7 @@ https://github.com/inkarkat/vim-EnhancedJumps/issues or email (address below).
 ==============================================================================
 HISTORY						       *EnhancedJumps-history*
 
-3.11	RELEASEME
+3.11	10-Nov-2024
 - ENH: Allow to disable all default mappings via a single
   g:EnhancedJumps_no_mappings configuration flag. Thanks to infokiller for the
   patch.
@@ -301,7 +301,7 @@ BF: A '^\)' in the jump text caused "E55: Unmatched \)"
 First published version.
 
 ==============================================================================
-Copyright: (C) 2009-2020 Ingo Karkat
+Copyright: (C) 2009-2024 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
